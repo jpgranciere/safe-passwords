@@ -1,0 +1,120 @@
+<UserControl x:Class="Cofre.App.Views.SettingsView" x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <UserControl.Resources>
+        <Style x:Key="SettingCard" TargetType="Border">
+            <Setter Property="Padding" Value="14,11" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="14,12,14,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Margin="0,0,0,6">
+            <Button Style="{StaticResource IconButton}" HorizontalAlignment="Left" ToolTip="Voltar (Esc)" Click="OnBack">
+                <ui:SymbolIcon Symbol="ChevronLeft24" FontSize="18" />
+            </Button>
+            <TextBlock Text="Configurações" Style="{StaticResource ViewTitle}" HorizontalAlignment="Center" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="2,0,8,0">
+            <StackPanel>
+                <TextBlock Text="SEGURANÇA" Style="{StaticResource SectionHeader}" Margin="4,6,0,6" />
+
+                <Border Style="{StaticResource SettingCard}">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Bloquear automaticamente" />
+                            <TextBlock Text="Após ficar sem uso" Style="{StaticResource MutedText}" />
+                        </StackPanel>
+                        <ComboBox x:Name="AutoLockCombo" HorizontalAlignment="Right" MinWidth="118"
+                                  SelectionChanged="OnAutoLockChanged" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SettingCard}">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Limpar área de transferência" />
+                            <TextBlock Text="Depois de copiar uma senha" Style="{StaticResource MutedText}" />
+                        </StackPanel>
+                        <ComboBox x:Name="ClipboardCombo" HorizontalAlignment="Right" MinWidth="118"
+                                  SelectionChanged="OnClipboardChanged" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SettingCard}">
+                    <Grid>
+                        <TextBlock Text="Alterar senha mestra" VerticalAlignment="Center" />
+                        <ui:Button Content="Alterar" HorizontalAlignment="Right" Click="OnChangeMasterPassword" />
+                    </Grid>
+                </Border>
+
+                <TextBlock Text="USO" Style="{StaticResource SectionHeader}" Margin="4,14,0,6" />
+
+                <Border Style="{StaticResource SettingCard}">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Atalho global" />
+                            <TextBlock x:Name="HotkeyText" Style="{StaticResource MutedText}" />
+                        </StackPanel>
+                        <ui:Button x:Name="HotkeyButton" Content="Alterar" HorizontalAlignment="Right" Click="OnChangeHotkey" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SettingCard}">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Pressionar Enter ao digitar" />
+                            <TextBlock Text="Envia o login logo após preencher" Style="{StaticResource MutedText}" />
+                        </StackPanel>
+                        <ui:ToggleSwitch x:Name="AutoSubmitToggle" HorizontalAlignment="Right" Click="OnAutoSubmitChanged" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SettingCard}">
+                    <Grid>
+                        <TextBlock Text="Iniciar com o Windows" VerticalAlignment="Center" />
+                        <ui:ToggleSwitch x:Name="StartupToggle" HorizontalAlignment="Right" Click="OnStartupChanged" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SettingCard}">
+                    <Grid>
+                        <TextBlock Text="Tema" VerticalAlignment="Center" />
+                        <ComboBox x:Name="ThemeCombo" HorizontalAlignment="Right" MinWidth="118"
+                                  SelectionChanged="OnThemeChanged" />
+                    </Grid>
+                </Border>
+
+                <TextBlock Text="DADOS" Style="{StaticResource SectionHeader}" Margin="4,14,0,6" />
+
+                <Border Style="{StaticResource SettingCard}">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Backup do cofre" />
+                            <TextBlock Text="Cópia do arquivo já criptografado" Style="{StaticResource MutedText}" />
+                        </StackPanel>
+                        <ui:Button Content="Salvar cópia" HorizontalAlignment="Right" Click="OnBackup" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SettingCard}">
+                    <Grid>
+                        <TextBlock Text="Pasta do cofre" VerticalAlignment="Center" />
+                        <ui:Button Content="Abrir" HorizontalAlignment="Right" Click="OnOpenFolder" />
+                    </Grid>
+                </Border>
+
+                <TextBlock x:Name="AboutText" Style="{StaticResource MutedText}" TextAlignment="Center" Margin="0,16,0,8" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

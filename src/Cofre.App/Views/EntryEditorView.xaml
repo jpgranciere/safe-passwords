@@ -1,0 +1,64 @@
+<UserControl x:Class="Cofre.App.Views.EntryEditorView" x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:controls="clr-namespace:Cofre.App.Controls">
+    <Grid Margin="14,12,14,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Margin="0,0,0,4">
+            <Button Style="{StaticResource IconButton}" HorizontalAlignment="Left" ToolTip="Voltar (Esc)" Click="OnCancel">
+                <ui:SymbolIcon Symbol="ChevronLeft24" FontSize="18" />
+            </Button>
+            <TextBlock x:Name="TitleText" Style="{StaticResource ViewTitle}" HorizontalAlignment="Center" />
+            <Button x:Name="FavoriteButton" Style="{StaticResource IconButton}" HorizontalAlignment="Right"
+                    ToolTip="Favorita (aparece primeiro na lista)" Click="OnToggleFavorite">
+                <ui:SymbolIcon x:Name="FavoriteIcon" Symbol="Star24" FontSize="19" />
+            </Button>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="2,0,8,0">
+            <StackPanel>
+                <TextBlock Text="Nome" Style="{StaticResource FieldLabel}" Margin="2,4,0,5" />
+                <ui:TextBox x:Name="TitleInput" PlaceholderText="Ex.: Gmail, Banco, Netflix" MaxLength="120"
+                            TextChanged="OnAnyChanged" />
+                <TextBlock x:Name="TitleError" Text="Dê um nome para esta entrada." Visibility="Collapsed" FontSize="12"
+                           Margin="2,4,0,0" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+
+                <TextBlock Text="Usuário ou e-mail" Style="{StaticResource FieldLabel}" />
+                <ui:TextBox x:Name="UsernameInput" PlaceholderText="nome@exemplo.com" MaxLength="200" />
+
+                <TextBlock Text="Senha" Style="{StaticResource FieldLabel}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ui:PasswordBox x:Name="PasswordInput" PlaceholderText="Senha" PasswordChanged="OnPasswordChanged" />
+                    <ui:Button Grid.Column="1" Margin="6,0,0,0" Icon="{ui:SymbolIcon ArrowSync24}"
+                               ToolTip="Gerar senha forte" Click="OnQuickGenerate" />
+                </Grid>
+                <controls:StrengthBar x:Name="Strength" Margin="0,7,0,0" />
+                <ui:HyperlinkButton Content="Opções do gerador" Padding="2,4" Margin="0,2,0,0" Click="OnOpenGenerator" />
+
+                <TextBlock Text="Site (opcional)" Style="{StaticResource FieldLabel}" Margin="2,6,0,5" />
+                <ui:TextBox x:Name="UrlInput" PlaceholderText="https://exemplo.com" MaxLength="300" />
+
+                <TextBlock Text="Notas (opcional)" Style="{StaticResource FieldLabel}" />
+                <ui:TextBox x:Name="NotesInput" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72" MaxHeight="110"
+                            VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" MaxLength="4000" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2" Margin="0,10,0,0">
+            <ui:Button x:Name="DeleteButton" Content="Excluir" Appearance="Danger" Foreground="White"
+                       Icon="{ui:SymbolIcon Delete24}" HorizontalAlignment="Left" Click="OnDelete" />
+            <ui:Button Content="Salvar" Appearance="Primary" Icon="{ui:SymbolIcon Save24}"
+                       HorizontalAlignment="Right" MinWidth="110" Click="OnSave" />
+        </Grid>
+    </Grid>
+</UserControl>

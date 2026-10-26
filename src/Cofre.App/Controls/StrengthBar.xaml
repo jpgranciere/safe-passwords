@@ -1,0 +1,15 @@
+<UserControl x:Class="Cofre.App.Controls.StrengthBar" x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <UniformGrid Rows="1" Columns="5">
+            <Border x:Name="Seg0" Height="4" CornerRadius="2" Margin="0,0,3,0" />
+            <Border x:Name="Seg1" Height="4" CornerRadius="2" Margin="1.5,0,1.5,0" />
+            <Border x:Name="Seg2" Height="4" CornerRadius="2" Margin="1.5,0,1.5,0" />
+            <Border x:Name="Seg3" Height="4" CornerRadius="2" Margin="1.5,0,1.5,0" />
+            <Border x:Name="Seg4" Height="4" CornerRadius="2" Margin="3,0,0,0" />
+        </UniformGrid>
+        <TextBlock x:Name="Label" FontSize="11" Margin="0,5,0,0"
+                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+    </StackPanel>
+</UserControl>

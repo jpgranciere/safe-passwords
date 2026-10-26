@@ -1,0 +1,42 @@
+<UserControl x:Class="Cofre.App.Views.SetupView" x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:controls="clr-namespace:Cofre.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,0">
+        <StackPanel VerticalAlignment="Center" Margin="0,24">
+            <Image Source="/Assets/logo.png" Width="76" Height="76"
+                   RenderOptions.BitmapScalingMode="HighQuality" HorizontalAlignment="Center" />
+            <TextBlock Text="Crie seu cofre" FontSize="23" FontWeight="SemiBold"
+                       HorizontalAlignment="Center" Margin="0,16,0,4" />
+            <TextBlock Text="Escolha uma senha mestra forte. Ela é a única chave de todas as suas senhas."
+                       Style="{StaticResource MutedText}" TextAlignment="Center" FontSize="13" />
+
+            <TextBlock Text="Senha mestra" Style="{StaticResource FieldLabel}" Margin="2,20,0,5" />
+            <ui:PasswordBox x:Name="PasswordInput" PlaceholderText="Pelo menos 10 caracteres"
+                            PasswordChanged="OnPasswordChanged" />
+            <controls:StrengthBar x:Name="Strength" Margin="0,8,0,0" />
+
+            <TextBlock Text="Confirmar senha mestra" Style="{StaticResource FieldLabel}" />
+            <ui:PasswordBox x:Name="ConfirmInput" PlaceholderText="Digite novamente"
+                            PasswordChanged="OnPasswordChanged" />
+
+            <TextBlock x:Name="ErrorText" Visibility="Collapsed" Margin="2,10,0,0" TextWrapping="Wrap" FontSize="12"
+                       Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+
+            <Border Margin="0,16,0,0" Padding="12,10" CornerRadius="9"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="Info24" FontSize="16" VerticalAlignment="Top" Margin="0,1,10,0"
+                                   Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+                    <TextBlock Style="{StaticResource MutedText}" MaxWidth="278"
+                               Text="Não existe recuperação: se você esquecer a senha mestra, os dados do cofre não podem ser abertos por ninguém." />
+                </StackPanel>
+            </Border>
+
+            <ui:Button x:Name="CreateButton" Content="Criar cofre" Appearance="Primary"
+                       HorizontalAlignment="Stretch" Margin="0,16,0,0" Padding="0,10"
+                       Icon="{ui:SymbolIcon ShieldLock24}" Click="OnCreate" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
