@@ -197,7 +197,7 @@ internal static class ViewRenderer
         {
             RespondToDialog("", tag + "-dialog-browser", expiry.Cancel);
             var accepted = AppDialogWindow.Confirm(main, "Preencher neste site?", "Confira o domínio antes de liberar suas credenciais.",
-                "Permitir preenchimento", context: "Site: https://example.com\nConta: Conta de demonstração", cancellationToken: expiry.Token);
+                "Permitir preenchimento", context: "Site: https://example.com\nConta: Conta de demonstração", cancellationToken: expiry.Token, bringToFront: true);
             Pump();
             Check(!accepted && !Application.Current.Windows.OfType<AppDialogWindow>().Any(), "Expiring a browser request closes its dialog without consent");
         }

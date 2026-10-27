@@ -12,7 +12,7 @@
     <Grid Background="{DynamicResource MainCanvasBrush}" TextElement.Foreground="{DynamicResource MainInkBrush}">
         <Grid.RowDefinitions><RowDefinition Height="46"/><RowDefinition Height="*"/><RowDefinition Height="32"/></Grid.RowDefinitions>
         <Border BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,0,0,1" Background="{DynamicResource MainSidebarBrush}">
-            <ui:TitleBar x:Name="WindowTitleBar" Title="COFRE" ShowMinimize="True" ShowMaximize="True" ShowClose="True"
+            <ui:TitleBar x:Name="WindowTitleBar" Title="COFRE" Icon="/Assets/logo.png" ShowMinimize="True" ShowMaximize="True" ShowClose="True"
                          ForceShutdown="False" Foreground="{DynamicResource MainInkBrush}" ButtonsForeground="{DynamicResource MainInkBrush}"/>
         </Border>
         <Grid Grid.Row="1" x:Name="Workspace">
@@ -236,7 +236,7 @@
             <Grid Margin="18,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBlock Text="LOCAL · CRIPTOGRAFADO" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="1" x:Name="Status" FontSize="12" Margin="24,0,20,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource BrandBrush}" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-                <TextBlock Grid.Column="2" Text="COFRE / 1.2.2" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="COFRE / 1.3.1" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
             </Grid>
         </Border>
         <Popup x:Name="CopyFeedback" Placement="Bottom" VerticalOffset="7" StaysOpen="True" AllowsTransparency="True" PopupAnimation="Fade">

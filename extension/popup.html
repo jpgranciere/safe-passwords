@@ -1,9 +1,12 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Cofre</title><link rel="stylesheet" href="popup.css"></head>
 <body>
-  <header><span class="mark">C</span><div><h1>Cofre</h1><span class="muted">Senhas locais, sob seu controle.</span></div></header>
+  <header><img class="mark" src="icons/cofre-48.png" alt=""><div><h1>Cofre</h1><span class="muted">Senhas locais, sob seu controle.</span></div></header>
   <p id="site" class="site">Consultando a página…</p>
   <p id="status" role="status" aria-live="polite"></p>
+  <button id="attach" type="button" class="primary">Ativar ícones neste site</button>
+  <p id="field-status" class="muted" role="status" aria-live="polite">Verificando os ícones deste site…</p>
+  <p class="muted">A ativação funciona mesmo com o Cofre bloqueado. Autorize este site uma vez; nas próximas visitas os ícones aparecem automaticamente.</p>
   <section><h2>Logins deste site</h2><div id="entries"></div><button id="refresh" type="button">Atualizar lista</button></section>
   <details><summary>Salvar uma nova entrada</summary>
     <p class="muted">Leia o formulário ou preencha os campos. O Cofre pedirá confirmação no Windows.</p>

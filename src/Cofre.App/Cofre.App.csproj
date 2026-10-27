@@ -11,7 +11,7 @@
     <RootNamespace>Cofre.App</RootNamespace>
     <ApplicationIcon>Assets\cofre.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.2.2</Version>
+    <Version>1.3.1</Version>
     <Product>Cofre</Product>
     <Description>Gerenciador de senhas local</Description>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

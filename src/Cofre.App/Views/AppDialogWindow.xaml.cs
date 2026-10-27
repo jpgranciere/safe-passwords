@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Interop;
+using Cofre.App.Services;
 using Wpf.Ui.Controls;
 
 namespace Cofre.App.Views;
@@ -10,12 +12,14 @@ internal partial class AppDialogWindow : FluentWindow
 {
     private bool _cancelPending;
 
-    private AppDialogWindow(Window owner, string title, string message, string confirm, string cancel, bool destructive, string? context)
+    private AppDialogWindow(Window owner, string title, string message, string confirm, string cancel, bool destructive, string? context, bool bringToFront)
     {
         InitializeComponent();
         Owner = owner;
         ShowActivated = owner.ShowActivated;
-        Title = title;
+        Topmost = bringToFront && owner.ShowActivated;
+        ShowInTaskbar = bringToFront && owner.ShowActivated;
+        Title = bringToFront ? title + " — Cofre" : title;
         DialogTitle.Text = title;
         DialogMessage.Text = message;
         ConfirmAction.Content = confirm;
@@ -29,16 +33,25 @@ internal partial class AppDialogWindow : FluentWindow
         }
         PreviewMouseDown += (_, _) => App.Services.IdleLock.Touch();
         PreviewKeyDown += (_, _) => App.Services.IdleLock.Touch();
-        Loaded += (_, _) => { if (_cancelPending) Cancel(); else CancelAction.Focus(); };
+        Loaded += (_, _) =>
+        {
+            if (_cancelPending) { Cancel(); return; }
+            if (bringToFront && owner.ShowActivated)
+            {
+                Activate();
+                NativeMethods.SetForegroundWindow(new WindowInteropHelper(this).Handle);
+            }
+            CancelAction.Focus();
+        };
     }
 
     internal static bool Confirm(Window owner, string title, string message, string confirm, string cancel = "Cancelar",
-        bool destructive = false, string? context = null, CancellationToken cancellationToken = default)
+        bool destructive = false, string? context = null, CancellationToken cancellationToken = default, bool bringToFront = false)
     {
         var vault = App.Services.Vault;
         if (!vault.IsUnlocked || cancellationToken.IsCancellationRequested
             || owner.OwnedWindows.OfType<AppDialogWindow>().Any()) return false;
-        var dialog = new AppDialogWindow(owner, title, message, confirm, cancel, destructive, context);
+        var dialog = new AppDialogWindow(owner, title, message, confirm, cancel, destructive, context, bringToFront);
         var root = owner.Content as Panel;
         var backdrop = new Border { Name = "DialogBackdrop", Background = new SolidColorBrush(Color.FromArgb(145, 0, 0, 0)), Focusable = false };
         Panel.SetZIndex(backdrop, 100);

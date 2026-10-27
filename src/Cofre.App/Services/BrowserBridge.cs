@@ -70,11 +70,14 @@ internal sealed class BrowserBridge : IDisposable
         ((App)Application.Current).OpenMainWindow();
         var owner = Application.Current.Windows.OfType<Views.MainWindow>().FirstOrDefault();
         var fill = approval.Action == "fill";
+        var update = approval.Action == "update";
         var context = $"Site: {approval.Origin}\nConta: {SafeLabel(approval.Title)}\nUsuário: {SafeLabel(approval.Username)}";
         var approved = owner is not null && Views.AppDialogWindow.Confirm(owner,
-            fill ? "Preencher neste site?" : "Salvar esta conta?",
-            fill ? "Confira o domínio abaixo antes de liberar suas credenciais para o navegador." : "Confira os dados abaixo. Uma nova conta será criada no seu cofre.",
-            fill ? "Permitir preenchimento" : "Salvar no cofre", context: context, cancellationToken: cancellationToken);
+            fill ? "Preencher neste site?" : update ? "Atualizar esta conta?" : "Salvar esta conta?",
+            fill ? "Confira o domínio abaixo antes de liberar suas credenciais para o navegador."
+                : update ? "O usuário e a senha desta conta serão substituídos pelos dados do formulário. Confira o domínio e a conta."
+                : "Confira os dados abaixo. Uma nova conta será criada no seu cofre.",
+            fill ? "Permitir preenchimento" : update ? "Atualizar conta" : "Salvar no cofre", context: context, cancellationToken: cancellationToken, bringToFront: true);
         if (approved) App.Services.IdleLock.Touch();
         return approved;
     }

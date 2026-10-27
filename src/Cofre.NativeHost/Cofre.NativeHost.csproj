@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
     <AssemblyName>Cofre.NativeHost</AssemblyName>
-    <Version>1.2.2</Version>
+    <Version>1.3.1</Version>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="..\Cofre.Core\Cofre.Core.csproj"/></ItemGroup>
 </Project>

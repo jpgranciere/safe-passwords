@@ -13,7 +13,8 @@ if (-not $Dotnet) {
     $localSdk = Join-Path $env:LOCALAPPDATA 'Microsoft\dotnet\dotnet.exe'
     $Dotnet = if (Test-Path -LiteralPath $localSdk) { $localSdk } else { 'dotnet' }
 }
-& $Dotnet publish (Join-Path $projectRoot 'src\Cofre.App') -c Release -r win-x64 -p:SelfContained=true -p:PublishSingleFile=true -o $OutputDirectory --nologo
+# Bundle WPF native DLLs too; otherwise a clean output folder can compile successfully and crash at startup.
+& $Dotnet publish (Join-Path $projectRoot 'src\Cofre.App') -c Release -r win-x64 -p:SelfContained=true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $OutputDirectory --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao publicar o aplicativo.' }
 & $Dotnet publish (Join-Path $projectRoot 'src\Cofre.NativeHost') -c Release -r win-x64 -p:SelfContained=true -p:PublishSingleFile=true -o (Join-Path $OutputDirectory 'native') --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao publicar a integração nativa.' }
@@ -38,7 +39,7 @@ foreach ($shortcutFolder in @([Environment]::GetFolderPath('Desktop'), [Environm
     $shortcut.Save()
 }
 $startupKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
-$existingStartup = Get-ItemPropertyValue -LiteralPath $startupKey -Name 'Cofre' -ErrorAction SilentlyContinue
+$existingStartup = (Get-ItemProperty -LiteralPath $startupKey -ErrorAction SilentlyContinue).Cofre
 if ($existingStartup -is [string] -and $existingStartup.Trim('"').StartsWith(($projectRoot + '\publish\'), [StringComparison]::OrdinalIgnoreCase)) {
     Set-ItemProperty -LiteralPath $startupKey -Name 'Cofre' -Value ('"' + $targetExe + '"')
 }

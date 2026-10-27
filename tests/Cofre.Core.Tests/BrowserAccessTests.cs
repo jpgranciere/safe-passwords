@@ -89,5 +89,53 @@ public class BrowserAccessTests : IDisposable
         Assert.True(JsonSerializer.SerializeToUtf8Bytes(result).Length < BrowserProtocol.MaximumBytes);
     }
 
+    [Fact]
+    public void UpdateRequiresConsentAndPreservesOtherFields()
+    {
+        var original = _entry.Clone();
+        original.Notes = "Keep notes"; original.Folder = "Personal"; original.Tags = "mail"; original.Favorite = true;
+        original = _vault.Upsert(original);
+        var request = new { action = "update", url = "https://example.com", id = original.Id, username = "new-user", password = "new-secret" };
+        Assert.False(Call(new BrowserAccess(_vault, _ => false), request).GetProperty("ok").GetBoolean());
+        Assert.Equal(original.Password, Assert.Single(_vault.Entries).Password);
+        var access = new BrowserAccess(_vault, approval => {
+            Assert.Equal("update", approval.Action); Assert.Equal(original.Title, approval.Title);
+            return true;
+        });
+        Assert.True(Call(access, request).GetProperty("ok").GetBoolean());
+        var updated = Assert.Single(_vault.Entries);
+        Assert.Equal("new-secret", updated.Password); Assert.Equal("new-user", updated.Username);
+        Assert.Equal(original.Id, updated.Id); Assert.Equal(original.CreatedUtc, updated.CreatedUtc);
+        Assert.Equal(original.Title, updated.Title); Assert.Equal(original.Url, updated.Url);
+        Assert.Equal(original.Totp, updated.Totp); Assert.Equal(original.Notes, updated.Notes);
+        Assert.Equal(original.Folder, updated.Folder); Assert.Equal(original.Tags, updated.Tags); Assert.True(updated.Favorite);
+    }
+
+    [Fact]
+    public void UpdateCannotCrossOriginsOrSaveAfterLockOrConcurrentEdit()
+    {
+        object Request(string url) => new { action = "update", url, id = _entry.Id, username = "new", password = "new-secret" };
+        var neverApprove = new BrowserAccess(_vault, _ => throw new Exception("Must not ask consent for another site."));
+        Assert.False(Call(neverApprove, Request("https://example.com.evil.test")).GetProperty("ok").GetBoolean());
+        var concurrent = new BrowserAccess(_vault, _ => { var changed = _entry.Clone(); changed.Notes = "Concurrent edit"; _vault.Upsert(changed); return true; });
+        Assert.False(Call(concurrent, Request("https://example.com")).GetProperty("ok").GetBoolean());
+        Assert.Equal(_entry.Password, Assert.Single(_vault.Entries).Password);
+        var locked = new BrowserAccess(_vault, _ => { _vault.Lock(); return true; });
+        Assert.False(Call(locked, Request("https://example.com")).GetProperty("ok").GetBoolean());
+    }
+
+    [Fact]
+    public void UpdateRejectsEmptyPasswordsAndExpiredConsent()
+    {
+        var access = new BrowserAccess(_vault, _ => throw new Exception("Invalid data must not prompt."));
+        Assert.False(Call(access, new { action = "update", url = "https://example.com", id = _entry.Id, password = "" }).GetProperty("ok").GetBoolean());
+        using var expiry = new CancellationTokenSource();
+        access = new BrowserAccess(_vault, _ => { expiry.Cancel(); return true; });
+        var request = JsonSerializer.SerializeToElement(new { action = "update", url = "https://example.com", id = _entry.Id, password = "new-secret" });
+        var response = JsonSerializer.SerializeToElement(access.Handle(request, expiry.Token));
+        Assert.False(response.GetProperty("ok").GetBoolean());
+        Assert.Equal(_entry.Password, Assert.Single(_vault.Entries).Password);
+    }
+
     public void Dispose() { _vault.Dispose(); Directory.Delete(_dir, recursive: true); }
 }

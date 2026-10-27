@@ -32,21 +32,22 @@ public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool
                 .Select(e => new { id = e.Id, title = new string(e.Title.Take(200).ToArray()), username = new string(e.Username.Take(200).ToArray()) }).ToArray();
             return new { ok = true, entries = matches };
         }
-        if (action is not ("fill" or "save")) return Error("Ação não suportada.");
+        if (action is not ("fill" or "save" or "update")) return Error("Ação não suportada.");
         VaultEntry? selected = null;
         var username = Read(request, "username", 1000);
         var password = Read(request, "password", 4096);
         var title = Read(request, "title", 200);
-        if (action == "fill")
+        if (action is "fill" or "update")
         {
             if (!Guid.TryParse(Read(request, "id", 50), out var id)) return Error("Entrada inválida.");
             selected = vault.Entries.FirstOrDefault(e => e.Id == id && SiteOrigin.Matches(e.Url, origin));
             if (selected is null) return Error("Entrada não corresponde à origem desta página.");
-            title = selected.Title; username = selected.Username;
-            if (selected.Password.Length > 4096 || selected.Username.Length > 1000)
+            title = selected.Title;
+            if (action == "fill") username = selected.Username;
+            if (action == "fill" && (selected.Password.Length > 4096 || selected.Username.Length > 1000))
                 return Error("Esta entrada excede o limite da extensão. Use o aplicativo.");
         }
-        else if (string.IsNullOrWhiteSpace(title) || password.Length == 0) return Error("Informe título e senha.");
+        if (action != "fill" && (string.IsNullOrWhiteSpace(title) || password.Length == 0)) return Error("Informe título e senha.");
 
         if (cancellationToken.IsCancellationRequested
             || !approve(new BrowserApproval(action, origin, title, username))
@@ -62,7 +63,18 @@ public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool
         }
         try
         {
-            vault.Upsert(new VaultEntry { Title = title.Trim(), Username = username, Password = password, Url = origin });
+            if (action == "update")
+            {
+                var current = vault.Entries.FirstOrDefault(e => e.Id == selected!.Id && SiteOrigin.Matches(e.Url, origin));
+                if (current is null || current.UpdatedUtc != selected!.UpdatedUtc || current.Password != selected.Password
+                    || current.Username != selected.Username || current.Url != selected.Url)
+                    return Error("A entrada mudou. Solicite a atualização novamente.");
+                var changed = current.Clone();
+                changed.Username = username;
+                changed.Password = password;
+                vault.Upsert(changed); // Keep TOTP, notes, folder, tags, title and URL.
+            }
+            else vault.Upsert(new VaultEntry { Title = title.Trim(), Username = username, Password = password, Url = origin });
             return new { ok = true };
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
