@@ -33,6 +33,32 @@
         <Setter Property="BorderBrush" Value="{DynamicResource BrandBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource MainAccentInkBrush}"/>
     </Style>
+    <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource FlatButton}">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+            <Border x:Name="Ghost" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
+                    BorderBrush="Transparent" BorderThickness="1">
+                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Ghost" Property="Background" Value="{DynamicResource MainHoverBrush}"/></Trigger>
+                <Trigger Property="IsPressed" Value="True"><Setter TargetName="Ghost" Property="Background" Value="{DynamicResource MainSelectedBrush}"/></Trigger>
+                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Ghost" Property="BorderBrush" Value="{DynamicResource BrandBrush}"/></Trigger>
+                <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Ghost" Property="Opacity" Value="0.35"/></Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style x:Key="IconAction" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+        <Setter Property="Width" Value="34"/><Setter Property="Height" Value="34"/><Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+        <Setter Property="Background" Value="{DynamicResource MainDangerFillBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource MainDangerFillBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
     <Style x:Key="NavItem" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource MainMutedBrush}"/>
         <Setter Property="Background" Value="Transparent"/>
@@ -75,7 +101,7 @@
         </ControlTemplate></Setter.Value></Setter>
     </Style>
     <Style x:Key="Eyebrow" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="10"/><Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="11"/><Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource MainMutedBrush}"/>
     </Style>
     <Style x:Key="DetailLabel" TargetType="TextBlock" BasedOn="{StaticResource Eyebrow}"><Setter Property="Margin" Value="0,22,0,7"/></Style>

@@ -6,6 +6,9 @@
         WindowStartupLocation="CenterScreen" Background="{DynamicResource MainCanvasBrush}"
         Foreground="{DynamicResource MainInkBrush}" FontFamily="Segoe UI" FontSize="14"
         SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <ui:FluentWindow.Resources>
+        <Visibility x:Key="AccountMetadataVisibility">Visible</Visibility>
+    </ui:FluentWindow.Resources>
     <Grid Background="{DynamicResource MainCanvasBrush}" TextElement.Foreground="{DynamicResource MainInkBrush}">
         <Grid.RowDefinitions><RowDefinition Height="46"/><RowDefinition Height="*"/><RowDefinition Height="32"/></Grid.RowDefinitions>
         <Border BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,0,0,1" Background="{DynamicResource MainSidebarBrush}">
@@ -13,12 +16,12 @@
                          ForceShutdown="False" Foreground="{DynamicResource MainInkBrush}" ButtonsForeground="{DynamicResource MainInkBrush}"/>
         </Border>
         <Grid Grid.Row="1" x:Name="Workspace">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="204"/><ColumnDefinition Width="*" MinWidth="330"/><ColumnDefinition Width="430"/></Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="204"/><ColumnDefinition Width="*" MinWidth="330"/><ColumnDefinition x:Name="DetailsColumn" Width="0"/></Grid.ColumnDefinitions>
             <Border Background="{DynamicResource MainSidebarBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,0,1,0">
                 <DockPanel Margin="12,0">
                     <StackPanel DockPanel.Dock="Top">
                         <StackPanel Margin="16,30,0,24">
-                            <TextBlock Text="SEU ESPAÇO" Style="{StaticResource Eyebrow}"/>
+                            <TextBlock Text="NESTE DISPOSITIVO" Style="{StaticResource Eyebrow}"/>
                             <TextBlock Text="Cofre pessoal" FontSize="19" FontWeight="SemiBold" Margin="0,6,0,0"/>
                         </StackPanel>
                         <RadioButton x:Name="AllNav" GroupName="Navigation" Style="{StaticResource NavItem}" Tag="all" Click="OnFilter">
@@ -36,9 +39,15 @@
                         <TextBlock Text="PASTAS" Style="{StaticResource Eyebrow}" Margin="16,32,0,10"/>
                     </StackPanel>
                     <StackPanel DockPanel.Dock="Bottom" Margin="8,18,8,22">
-                        <Button Content="Painel rápido" Style="{StaticResource FlatButton}" Click="OnQuick" Margin="0,0,0,8"/>
-                        <Button Content="Extensão do navegador" Style="{StaticResource FlatButton}" Click="OnExtension" Margin="0,0,0,8" Padding="8,9"/>
-                        <Button Style="{StaticResource FlatButton}" Click="OnLock"><StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="LockClosed24" FontSize="15" Margin="0,0,8,0"/><TextBlock Text="Bloquear cofre"/></StackPanel></Button>
+                        <Button Style="{StaticResource GhostButton}" Click="OnQuick" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="8,10">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Keyboard24" FontSize="16" Margin="0,0,10,0"/><TextBlock Text="Painel rápido"/></StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource GhostButton}" Click="OnExtension" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="8,10">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Globe24" FontSize="16" Margin="0,0,10,0"/><TextBlock Text="Extensão"/></StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource GhostButton}" Click="OnLock" HorizontalContentAlignment="Left" Padding="8,10">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="LockClosed24" FontSize="16" Margin="0,0,10,0"/><TextBlock Text="Bloquear cofre"/></StackPanel>
+                        </Button>
                     </StackPanel>
                     <ListBox x:Name="Folders" SelectionChanged="OnFolder" Background="Transparent" BorderThickness="0"
                              ItemContainerStyle="{StaticResource MainRow}" Padding="10,0" Foreground="{DynamicResource MainInkBrush}">
@@ -47,14 +56,13 @@
                 </DockPanel>
             </Border>
             <Grid Grid.Column="1" Margin="28,28,28,20">
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="BIBLIOTECA" Style="{StaticResource Eyebrow}"/>
-                        <TextBlock x:Name="Heading" Text="Minhas contas" FontSize="27" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                        <TextBlock x:Name="Heading" Text="Minhas contas" FontSize="30" FontWeight="SemiBold" Margin="0"/>
                     </StackPanel>
-                    <Button Grid.Column="1" x:Name="NewButton" Style="{StaticResource PrimaryButton}" Content="+ Adicionar" Click="OnNew" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <Button Grid.Column="1" x:Name="NewButton" Style="{StaticResource PrimaryButton}" Content="+ Adicionar conta" Click="OnNew" VerticalAlignment="Center" Margin="12,0,0,0"/>
                 </Grid>
                 <TextBlock x:Name="Counts" Grid.Row="1" Foreground="{DynamicResource MainMutedBrush}" FontSize="12" Margin="0,12,0,24"/>
                 <Border x:Name="AuditCard" Grid.Row="2" Background="{DynamicResource MainPanelBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="1" Padding="18" Margin="0,0,0,20" Visibility="Collapsed">
@@ -64,18 +72,40 @@
                         <TextBlock Text="Análise local de força e repetição. TOTP não cadastrado não significa ausência de 2FA no site. Não consulta vazamentos." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MainMutedBrush}"/>
                     </StackPanel>
                 </Border>
-                <ui:TextBox Grid.Row="3" x:Name="Search" PlaceholderText="Buscar contas, pastas ou tags" ToolTip="Buscar por nome, usuário, site, pasta ou tag" TextChanged="OnSearch" Margin="0,0,0,20" MinHeight="40"/>
-                <Grid Grid.Row="4">
+                <ui:TextBox Grid.Row="3" x:Name="Search" Icon="{ui:SymbolIcon Search24}" ClearButtonEnabled="True" PlaceholderText="Buscar contas, pastas ou tags" ToolTip="Buscar por nome, usuário, site, pasta ou tag" TextChanged="OnSearch" Margin="0,0,0,20" MinHeight="40"/>
+                <Border Grid.Row="4" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,0,0,1" Padding="18,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="20"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="1" Text="CONTA" Style="{StaticResource Eyebrow}"/>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="{DynamicResource AccountMetadataVisibility}">
+                            <TextBlock Text="SITE" Width="170" Style="{StaticResource Eyebrow}"/>
+                            <TextBlock Text="PASTA" Width="120" Style="{StaticResource Eyebrow}"/>
+                            <TextBlock Text="ATUALIZADA EM" Width="90" Style="{StaticResource Eyebrow}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Grid Grid.Row="5">
                     <ListBox x:Name="Entries" SelectionChanged="OnSelect" Background="Transparent" BorderThickness="0" Padding="0" HorizontalContentAlignment="Stretch" ItemContainerStyle="{StaticResource MainRow}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate><DataTemplate>
                             <Grid Margin="18,18">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="36"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <ui:SymbolIcon Symbol="Key24" FontSize="21" Foreground="{DynamicResource BrandBrush}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,2,0,0"/>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding Username}" FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,5,0,0"/>
-                                    <TextBlock Text="{Binding Folder}" FontSize="11" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="20"/></Grid.ColumnDefinitions>
+                                <Border Width="34" Height="40" Background="{DynamicResource MainSelectedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Initial}" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource BrandBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <ui:SymbolIcon Grid.Column="1" Symbol="Star24" FontSize="12" Foreground="{DynamicResource BrandBrush}" Margin="8,0,0,0" Visibility="{Binding FavoriteVisibility}"/>
+                                    </Grid>
+                                    <TextBlock Text="{Binding Username}" FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,5,0,0" Visibility="{Binding UsernameVisibility}"/>
                                 </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Visibility="{DynamicResource AccountMetadataVisibility}">
+                                    <TextBlock Text="{Binding SiteLabel}" Width="170" Padding="0,0,14,0" FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding FolderLabel}" Width="120" Padding="0,0,14,0" FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding UpdatedLabel}" Width="90" FontSize="12" Foreground="{DynamicResource MainMutedBrush}"/>
+                                </StackPanel>
+                                <ui:SymbolIcon Grid.Column="3" Symbol="ChevronRight24" FontSize="14" Foreground="{DynamicResource MainMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                             </Grid>
                         </DataTemplate></ListBox.ItemTemplate>
                     </ListBox>
@@ -85,54 +115,84 @@
                         <TextBlock Text="Adicione uma conta ou ajuste a busca." FontSize="12" TextAlignment="Center" Foreground="{DynamicResource MainMutedBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Grid>
+                <Border Grid.Row="6" x:Name="CollectionTip" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,1,0,0" Margin="0,20,0,0" Padding="0,16,0,0">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <ui:SymbolIcon Symbol="Cursor24" FontSize="16" Foreground="{DynamicResource BrandBrush}" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                        <TextBlock Grid.Column="1" Text="Selecione uma conta para ver os detalhes. Suas senhas ficam ocultas até você pedir para exibi-las." FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextWrapping="Wrap"/>
+                    </Grid>
+                </Border>
             </Grid>
-            <Border Grid.Column="2" Background="{DynamicResource MainPanelBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="1,0,0,0">
+            <Border Grid.Column="2" x:Name="DetailsPane" Visibility="Collapsed" Background="{DynamicResource MainPanelBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="1,0,0,0">
                 <Grid Margin="26,28,26,22">
                     <DockPanel>
+                        <Grid DockPanel.Dock="Top" Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock x:Name="DetailsCaption" Text="DETALHES DA CONTA" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" x:Name="EditButton" Style="{StaticResource GhostButton}" Click="OnEdit" Padding="10,7" Margin="8,0,8,0"><StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Edit24" FontSize="15" Margin="0,0,7,0"/><TextBlock Text="Editar"/></StackPanel></Button>
+                            <Button Grid.Column="2" x:Name="CloseDetailsButton" Style="{StaticResource IconAction}" Click="OnCloseDetails" ToolTip="Fechar detalhes (Esc)" AutomationProperties.Name="Fechar detalhes" Padding="7">
+                                <ui:SymbolIcon Symbol="Dismiss24" FontSize="16"/>
+                            </Button>
+                        </Grid>
                         <StackPanel x:Name="EditorActions" DockPanel.Dock="Bottom" Margin="0,18,0,0" Visibility="Collapsed">
                             <Border Height="1" Background="{DynamicResource MainLineBrush}" Margin="0,0,0,14"/>
                             <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <Button x:Name="SaveButton" Content="Salvar" Style="{StaticResource PrimaryButton}" Click="OnSave" Margin="0,0,8,0"/>
-                                <Button Grid.Column="1" x:Name="CancelButton" Content="Cancelar" Style="{StaticResource FlatButton}" Click="OnDiscard" Margin="0,0,8,0"/>
-                                <Button Grid.Column="2" Content="Excluir" x:Name="DeleteButton" Style="{StaticResource FlatButton}" Foreground="{DynamicResource MainDangerBrush}" Click="OnDelete"/>
+                                <Button Grid.Column="1" x:Name="CancelButton" Content="Cancelar" Style="{StaticResource GhostButton}" Click="OnDiscard" Margin="0,0,8,0"/>
+                                <Button Grid.Column="2" Content="Excluir" x:Name="DeleteButton" Style="{StaticResource GhostButton}" Foreground="{DynamicResource MainDangerBrush}" Click="OnDelete"/>
                             </Grid>
                         </StackPanel>
                         <ScrollViewer x:Name="DetailScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,0">
                             <Grid>
                                 <StackPanel x:Name="ReadPanel">
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="DETALHES DA CONTA" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
-                                        <Button Grid.Column="1" x:Name="EditButton" Content="Editar" Style="{StaticResource FlatButton}" Click="OnEdit" Padding="12,7"/>
-                                    </Grid>
-                                    <TextBlock x:Name="SummaryTitle" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,18,0,8"/>
-                                    <TextBlock x:Name="SummaryMeta" Foreground="{DynamicResource MainMutedBrush}" FontSize="12"/>
+                                    <TextBlock x:Name="SummaryTitle" FontSize="28" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,2,0,8"/>
+                                    <TextBlock x:Name="SummaryMeta" Foreground="{DynamicResource MainMutedBrush}" FontSize="13"/>
                                     <Border Height="1" Background="{DynamicResource MainLineBrush}" Margin="0,24,0,0"/>
-                                    <TextBlock Text="USUÁRIO / E-MAIL" Style="{StaticResource DetailLabel}"/>
-                                    <TextBlock x:Name="SummaryUser" Style="{StaticResource DetailValue}"/>
-                                    <Button Content="Copiar usuário" Style="{StaticResource FlatButton}" Click="OnCopyUser" HorizontalAlignment="Left" Margin="0,12,0,0"/>
-                                    <TextBlock Text="SENHA" Style="{StaticResource DetailLabel}"/>
+                                    <Grid Margin="0,24,0,0">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Text="USUÁRIO / E-MAIL" Style="{StaticResource Eyebrow}" Margin="0,0,0,9"/>
+                                            <TextBlock x:Name="SummaryUser" Style="{StaticResource DetailValue}"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" x:Name="CopyUserButton" Style="{StaticResource IconAction}" Click="OnCopyUser" VerticalAlignment="Bottom"
+                                                ToolTip="Copiar usuário" AutomationProperties.Name="Copiar usuário"><ui:SymbolIcon Symbol="Copy24" FontSize="17"/></Button>
+                                    </Grid>
+                                    <TextBlock Text="SENHA" Style="{StaticResource DetailLabel}" Margin="0,24,0,9"/>
                                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                        <TextBlock x:Name="SummaryPassword" Text="••••••••••••" FontFamily="Consolas" FontSize="19" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                        <Button Grid.Column="1" x:Name="RevealButton" Content="Exibir" Style="{StaticResource FlatButton}" Click="OnReveal" Padding="10,6" Margin="8,0,0,0"/>
+                                        <TextBlock x:Name="SummaryPassword" Text="••••••••••••" FontFamily="Consolas" FontSize="21" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        <Button Grid.Column="1" x:Name="RevealButton" Style="{StaticResource IconAction}" Click="OnReveal" ToolTip="Exibir senha" AutomationProperties.Name="Exibir ou ocultar senha">
+                                            <ui:SymbolIcon x:Name="RevealIcon" Symbol="Eye24" FontSize="18"/>
+                                        </Button>
                                     </Grid>
                                     <TextBlock x:Name="SummaryStrength" Foreground="{DynamicResource MainMutedBrush}" FontSize="12" Margin="0,6,0,0"/>
-                                    <Button Content="Copiar senha" Style="{StaticResource PrimaryButton}" Click="OnCopyPassword" HorizontalAlignment="Left" Margin="0,14,0,0"/>
-                                    <Border x:Name="TotpCard" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,1,0,1" Padding="0,18" Margin="0,24,0,0" Visibility="Collapsed">
-                                        <StackPanel>
-                                            <TextBlock Text="CÓDIGO DE VERIFICAÇÃO" Style="{StaticResource Eyebrow}"/>
-                                            <TextBlock x:Name="TotpCode" FontSize="30" FontFamily="Consolas" Foreground="{DynamicResource BrandBrush}" Margin="0,8,0,0"/>
-                                            <TextBlock x:Name="TotpTime" Foreground="{DynamicResource MainMutedBrush}" FontSize="12"/>
-                                            <Button Content="Copiar código" Style="{StaticResource FlatButton}" Click="OnCopyTotp" HorizontalAlignment="Left" Margin="0,12,0,0"/>
-                                        </StackPanel>
+                                    <Button x:Name="CopyPasswordButton" Style="{StaticResource PrimaryButton}" Click="OnCopyPassword" HorizontalAlignment="Left" Margin="0,18,0,0">
+                                        <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Copy24" FontSize="16" Margin="0,0,8,0"/><TextBlock Text="Copiar senha"/></StackPanel>
+                                    </Button>
+                                    <Border x:Name="TotpCard" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,1,0,0" Padding="0,22,0,0" Margin="0,26,0,0" Visibility="Collapsed">
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="CÓDIGO DE VERIFICAÇÃO" Style="{StaticResource Eyebrow}"/>
+                                                <TextBlock x:Name="TotpCode" FontSize="30" FontFamily="Consolas" Foreground="{DynamicResource BrandBrush}" Margin="0,10,0,4"/>
+                                                <TextBlock x:Name="TotpTime" Foreground="{DynamicResource MainMutedBrush}" FontSize="12"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" x:Name="CopyTotpButton" Style="{StaticResource IconAction}" Click="OnCopyTotp" VerticalAlignment="Center"
+                                                    ToolTip="Copiar código" AutomationProperties.Name="Copiar código"><ui:SymbolIcon Symbol="Copy24" FontSize="17"/></Button>
+                                        </Grid>
                                     </Border>
-                                    <TextBlock Text="ENDEREÇO DO SITE" Style="{StaticResource DetailLabel}"/>
-                                    <TextBlock x:Name="SummarySite" Style="{StaticResource DetailValue}"/>
-                                    <Button x:Name="OpenSiteButton" Content="Abrir site ↗" Style="{StaticResource FlatButton}" Click="OnOpenSite" HorizontalAlignment="Left" Margin="0,12,0,0"/>
-                                    <TextBlock Text="PASTA E TAGS" Style="{StaticResource DetailLabel}"/>
-                                    <TextBlock x:Name="SummaryOrganization" Style="{StaticResource DetailValue}"/>
-                                    <TextBlock Text="NOTAS" Style="{StaticResource DetailLabel}"/>
-                                    <TextBlock x:Name="SummaryNotes" Style="{StaticResource DetailValue}"/>
-                                    <TextBlock x:Name="SummaryFinding" Foreground="{DynamicResource MainDangerBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,20,0,0"/>
+                                    <Border Height="1" Background="{DynamicResource MainLineBrush}" Margin="0,26,0,0"/>
+                                    <Grid Margin="0,22,0,0">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Text="SITE" Style="{StaticResource Eyebrow}" Margin="0,0,0,9"/>
+                                            <TextBlock x:Name="SummarySite" Style="{StaticResource DetailValue}"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" x:Name="OpenSiteButton" Style="{StaticResource IconAction}" Click="OnOpenSite" VerticalAlignment="Bottom"
+                                                ToolTip="Abrir site" AutomationProperties.Name="Abrir site"><ui:SymbolIcon Symbol="Open24" FontSize="17"/></Button>
+                                    </Grid>
+                                    <TextBlock Text="ORGANIZAÇÃO" Style="{StaticResource DetailLabel}" Margin="0,26,0,9"/>
+                                    <TextBlock x:Name="SummaryOrganization" FontSize="13" Foreground="{DynamicResource MainMutedBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="NOTAS" Style="{StaticResource DetailLabel}" Margin="0,24,0,9"/>
+                                    <TextBlock x:Name="SummaryNotes" FontSize="13" Foreground="{DynamicResource MainMutedBrush}" TextWrapping="Wrap" LineHeight="21"/>
+                                    <TextBlock x:Name="SummaryFinding" Foreground="{DynamicResource MainDangerBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,22,0,0"/>
                                 </StackPanel>
                                 <StackPanel x:Name="Editor" Visibility="Collapsed">
                                     <TextBlock Text="EDITAR INFORMAÇÕES" Style="{StaticResource Eyebrow}"/>
@@ -142,7 +202,7 @@
                                     <TextBlock Text="Senha" Style="{StaticResource FieldLabel}"/>
                                     <ui:PasswordBox x:Name="PasswordInput" MinHeight="36" PasswordChanged="OnPasswordChanged"/>
                                     <TextBlock x:Name="StrengthText" Style="{StaticResource MutedText}" Margin="0,6,0,10"/>
-                                    <Button Content="Gerar senha" Style="{StaticResource FlatButton}" Click="OnGenerate" HorizontalAlignment="Left"/>
+                                    <Button Content="Gerar senha" Style="{StaticResource GhostButton}" Click="OnGenerate" HorizontalAlignment="Left"/>
                                     <TextBlock Text="Endereço do site" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="UrlInput" MaxLength="2048" PlaceholderText="https://exemplo.com"/>
                                     <TextBlock Text="Pasta" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="FolderInput" MaxLength="100"/>
                                     <TextBlock Text="Tags (separadas por vírgulas)" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="TagsInput" MaxLength="500"/>
@@ -176,8 +236,16 @@
             <Grid Margin="18,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBlock Text="LOCAL · CRIPTOGRAFADO" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
                 <TextBlock Grid.Column="1" x:Name="Status" FontSize="12" Margin="24,0,20,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource BrandBrush}" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-                <TextBlock Grid.Column="2" Text="COFRE / 1.2" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="COFRE / 1.2.2" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
             </Grid>
         </Border>
+        <Popup x:Name="CopyFeedback" Placement="Bottom" VerticalOffset="7" StaysOpen="True" AllowsTransparency="True" PopupAnimation="Fade">
+            <Border Background="{DynamicResource MainInkBrush}" Padding="12,9" IsHitTestVisible="False">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="Checkmark24" FontSize="14" Foreground="{DynamicResource MainCanvasBrush}" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="CopyFeedbackText" FontSize="12" Foreground="{DynamicResource MainCanvasBrush}"/>
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </ui:FluentWindow>

@@ -37,6 +37,11 @@ internal sealed class EntryRow : ListRow
     public VaultEntry Entry { get; }
     public string Title => Entry.Title;
     public string Username => Entry.Username;
+    public Guid Id => Entry.Id;
+    public string SiteLabel => Uri.TryCreate(Entry.Url, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http"
+        ? uri.IdnHost : "Site não informado";
+    public string FolderLabel => string.IsNullOrWhiteSpace(Entry.Folder) ? "Sem pasta" : Entry.Folder;
+    public string UpdatedLabel => Entry.UpdatedUtc.ToLocalTime().ToString("dd/MM/yyyy");
     public string Initial { get; }
     public Brush AvatarBrush { get; }
     public Visibility FavoriteVisibility => Entry.Favorite ? Visibility.Visible : Visibility.Collapsed;

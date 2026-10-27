@@ -6,7 +6,7 @@ para Chrome e Edge com integração nativa local. Nada de nuvem, conta ou servid
 
 ## Como usar
 
-1. Execute `publish\1.2.0\Cofre.exe` ou o atalho **Cofre**. A publicação inclui o runtime necessário.
+1. Execute `publish\1.2.2\Cofre.exe` ou o atalho **Cofre**. A publicação inclui o runtime necessário.
 2. Na primeira vez abre a tela **Crie seu cofre**: defina a senha mestra (mínimo 10 caracteres).
 3. O ícone do cofre fica na bandeja. Para abrir o painel:
    - clique no ícone, ou
@@ -25,6 +25,10 @@ para Chrome e Edge com integração nativa local. Nada de nuvem, conta ou servid
 A versão 1.2 usa uma interface de cantos retos, sem cartões arredondados, com grafite e verde oliva no tema escuro
 e marfim e oliva no tema claro. A barra superior permite arrastar, minimizar, maximizar/restaurar e fechar a janela.
 Fechar mantém o Cofre na bandeja; na primeira vez, uma notificação explica como reabrir ou encerrar o aplicativo.
+
+A versão 1.2.2 abre a lista sem selecionar contas nem reservar espaço para os detalhes. A lista mostra site, pasta e data de atualização; ao selecionar uma conta, fica compacta para acomodar o painel lateral. Use o botão **Fechar detalhes** ou **Esc** para recolhê-lo. Busca, troca de seção e desbloqueio não abrem outra conta automaticamente.
+
+O acabamento da versão 1.2.2 usa ações secundárias sem contorno, ícones consistentes e lápis ao lado de **Editar**. A cópia exibe uma confirmação junto ao botão. Descarte de alterações, exclusão e autorização do navegador usam diálogos próprios, com fundo escurecido e foco inicial na opção de cancelar. Esses diálogos fecham se o cofre bloquear; autorizações do navegador também fecham quando a solicitação expira.
 
 Selecionar uma conta abre uma visualização com **Copiar usuário**, **Copiar senha**, **Exibir/Ocultar** e **Abrir site**.
 O formulário aparece somente em **Editar** ou **+ Adicionar**. **Salvar** volta aos detalhes; **Cancelar** descarta
@@ -132,14 +136,14 @@ Parâmetros úteis do executável: `--data-dir <pasta>` (guarda cofre e configur
 `--show` (abre o painel ao iniciar). Em builds **Debug** existe também `--render <pasta> --password <senha>`, que
 desenha todas as telas em PNG sem abrir janela, útil para revisar o visual.
 
-`tools\publish.ps1` publica uma versão independente do runtime em `publish\1.2.0` e o host em sua subpasta `native`.
+`tools\publish.ps1` publica uma versão independente do runtime em `publish\1.2.2` e o host em sua subpasta `native`.
 Os atalhos da Área de Trabalho e do menu Iniciar são atualizados durante a publicação. Aceita `-Dotnet <caminho-do-SDK>` e `-OutputDirectory <pasta>`. Feche a versão de destino antes de recompilar.
 Para uma instalação personalizada, registre com `tools\register-extension.ps1 -AppDirectory <pasta-do-Cofre.exe>`.
 
 Para os testes do host publicado no PowerShell:
 
 ```powershell
-$env:COFRE_NATIVE_HOST = Join-Path (Get-Location) 'publish\1.2.0\native\Cofre.NativeHost.exe'
+$env:COFRE_NATIVE_HOST = Join-Path (Get-Location) 'publish\1.2.2\native\Cofre.NativeHost.exe'
 $env:COFRE_TEST_IDENTITY = [Environment]::UserDomainName + '\' + [Environment]::UserName
 node --test tests/native-host.test.mjs
 ```

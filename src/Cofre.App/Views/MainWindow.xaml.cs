@@ -5,12 +5,17 @@ using System.Windows.Threading;
 using Cofre.Core.Models;
 using Cofre.Core.Security;
 using Cofre.Core.Vault;
+using Cofre.App.ViewModels;
+using System.Windows.Input;
+using System.Windows.Media.Animation;
+using Wpf.Ui.Controls;
 
 namespace Cofre.App.Views;
 
 internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 {
     private readonly DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly DispatcherTimer _copyTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private VaultEntry? _draft;
     private string _filter = "all";
     private string? _folder;
@@ -29,12 +34,16 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         App.Services.Vault.Locked += OnVaultLocked;
         _clock.Tick += (_, _) => UpdateTotp();
         _clock.Start();
+        _copyTimer.Tick += (_, _) => HideCopyFeedback();
+        Deactivated += (_, _) => HideCopyFeedback();
+        StateChanged += (_, _) => HideCopyFeedback();
         PreviewMouseDown += (_, _) => App.Services.IdleLock.Touch();
         PreviewKeyDown += (_, _) => App.Services.IdleLock.Touch();
         foreach (var input in new[] { TitleInput, UserInput, UrlInput, FolderInput, TagsInput, NotesInput })
             input.TextChanged += (_, _) => { if (!_refreshing) _dirty = true; };
         FavoriteInput.Click += (_, _) => _dirty = true;
         IsVisibleChanged += (_, _) => { if (IsVisible) Refresh(); };
+        PreviewKeyDown += OnWindowKeyDown;
         Refresh();
     }
 
@@ -67,7 +76,6 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             }
             var all = App.Services.Vault.Entries;
             var findings = SecurityAudit.Analyze(all);
-            Counts.Text = $"{all.Count} entradas · {all.Count(e => e.Favorite)} favoritas · {all.Count(e => e.Totp.Length > 0)} autenticadores";
             AuditSummary.Text = $"{findings.Count(f => f.Weak)} senhas fracas\n{findings.Count(f => f.Reused)} entradas com senha repetida\n{findings.Count(f => f.MissingTotp)} sem TOTP cadastrado";
             AuditCard.Visibility = _filter == "security" ? Visibility.Visible : Visibility.Collapsed;
             Folders.ItemsSource = all.Select(e => e.Folder).Where(f => !string.IsNullOrWhiteSpace(f))
@@ -80,13 +88,16 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 && (_filter != "security" || needsAttention.Contains(e.Id)))
                 .OrderByDescending(e => e.Favorite).ThenBy(e => e.Title, StringComparer.CurrentCultureIgnoreCase).ToArray();
             var selectedId = _draft?.Id;
-            Entries.ItemsSource = rows;
-            Entries.SelectedItem = rows.FirstOrDefault(e => e.Id == selectedId);
+            var listRows = rows.Select(e => new EntryRow(e)).ToArray();
+            Entries.ItemsSource = listRows;
+            Entries.SelectedItem = listRows.FirstOrDefault(e => e.Id == selectedId);
+            Counts.Text = rows.Length == all.Count
+                ? $"{all.Count} {(all.Count == 1 ? "conta salva" : "contas salvas")} no seu cofre"
+                : $"{rows.Length} de {all.Count} contas nesta visualização";
             Empty.Visibility = rows.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
             if (!_dirty && !_new && !_editing)
             {
-                var selected = rows.FirstOrDefault(e => e.Id == selectedId) ?? rows.FirstOrDefault();
-                Entries.SelectedItem = selected;
+                var selected = rows.FirstOrDefault(e => e.Id == selectedId);
                 if (selected is null) { _draft = null; ClearEditor(); }
                 else LoadEntry(selected, false);
             }
@@ -98,6 +109,8 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void ClearEditor()
     {
+        HideCopyFeedback();
+        DetailsPane.BeginAnimation(OpacityProperty, null);
         TitleInput.Clear(); UserInput.Clear(); PasswordInput.Password = ""; UrlInput.Clear();
         FolderInput.Clear(); TagsInput.Clear(); NotesInput.Clear(); TotpInput.Password = "";
         FavoriteInput.IsChecked = false;
@@ -114,6 +127,8 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void LoadEntry(VaultEntry entry, bool isNew)
     {
+        var animate = _draft?.Id != entry.Id;
+        HideCopyFeedback();
         var wasRefreshing = _refreshing;
         _refreshing = true;
         _draft = entry.Clone(); _new = isNew;
@@ -127,7 +142,8 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         var finding = SecurityAudit.Analyze(App.Services.Vault.Entries).FirstOrDefault(f => f.EntryId == entry.Id);
         FindingText.Text = finding is { NeedsAttention: true } ? finding.Summary : "";
         SummaryTitle.Text = entry.Title;
-        SummaryMeta.Text = entry.Favorite ? "Favorito · Conta pessoal" : "Conta pessoal";
+        var context = string.IsNullOrWhiteSpace(entry.Folder) ? "Salvo neste cofre" : entry.Folder;
+        SummaryMeta.Text = entry.Favorite ? $"Favorito · {context}" : context;
         SummaryUser.Text = string.IsNullOrWhiteSpace(entry.Username) ? "Não informado" : entry.Username;
         SummarySite.Text = string.IsNullOrWhiteSpace(entry.Url) ? "Endereço não informado" : entry.Url;
         SummaryOrganization.Text = string.Join(" · ", new[] { entry.Folder, entry.Tags }.Where(x => !string.IsNullOrWhiteSpace(x)));
@@ -138,7 +154,8 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         OpenSiteButton.IsEnabled = TrySite(entry.Url, out _);
         _passwordVisible = false;
         SummaryPassword.Text = entry.Password.Length == 0 ? "Sem senha cadastrada" : "••••••••••••";
-        RevealButton.Content = "Exibir";
+        RevealIcon.Symbol = SymbolRegular.Eye24;
+        RevealButton.ToolTip = "Exibir senha";
         RevealButton.IsEnabled = entry.Password.Length > 0;
         _editing = isNew;
         Status.Text = ""; _dirty = false;
@@ -146,15 +163,50 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         UpdateTotp();
         UpdateMode();
         DetailScroll.ScrollToTop();
+        if (animate) DetailsPane.BeginAnimation(OpacityProperty, new DoubleAnimation(0.7, 1, TimeSpan.FromMilliseconds(130)));
     }
 
     private void UpdateMode()
     {
         var selected = _draft is not null;
+        DetailsPane.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
+        DetailsColumn.Width = new GridLength(selected ? 430 : 0);
+        Resources["AccountMetadataVisibility"] = selected ? Visibility.Collapsed : Visibility.Visible;
+        CollectionTip.Visibility = selected ? Visibility.Collapsed : Visibility.Visible;
+        DetailsCaption.Text = _editing ? (_new ? "ADICIONAR CONTA" : "EDITAR CONTA") : "DETALHES DA CONTA";
+        EditButton.Visibility = selected && !_editing ? Visibility.Visible : Visibility.Collapsed;
         ReadPanel.Visibility = selected && !_editing ? Visibility.Visible : Visibility.Collapsed;
         Editor.Visibility = selected && _editing ? Visibility.Visible : Visibility.Collapsed;
         EditorActions.Visibility = selected && _editing ? Visibility.Visible : Visibility.Collapsed;
         NoSelection.Visibility = selected ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void ClearSelection()
+    {
+        var wasRefreshing = _refreshing;
+        _refreshing = true;
+        try
+        {
+            _draft = null;
+            _dirty = false;
+            Entries.SelectedItem = null;
+            ClearEditor();
+        }
+        finally { _refreshing = wasRefreshing; }
+    }
+
+    private void OnCloseDetails(object sender, RoutedEventArgs e)
+    {
+        if (!CanDiscard()) return;
+        ClearSelection();
+        Entries.Focus();
+    }
+
+    private void OnWindowKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || _draft is null) return;
+        e.Handled = true;
+        OnCloseDetails(this, e);
     }
 
     private void UpdateNavigation()
@@ -171,7 +223,8 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         _editing = true;
         _passwordVisible = false;
         SummaryPassword.Text = _draft.Password.Length == 0 ? "Sem senha cadastrada" : "••••••••••••";
-        RevealButton.Content = "Exibir";
+        RevealIcon.Symbol = SymbolRegular.Eye24;
+        RevealButton.ToolTip = "Exibir senha";
         UpdateMode(); DetailScroll.ScrollToTop(); TitleInput.Focus();
     }
 
@@ -180,7 +233,8 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         if (_draft is null || !App.Services.Vault.IsUnlocked) return;
         _passwordVisible = !_passwordVisible;
         SummaryPassword.Text = _passwordVisible ? _draft.Password : "••••••••••••";
-        RevealButton.Content = _passwordVisible ? "Ocultar" : "Exibir";
+        RevealIcon.Symbol = _passwordVisible ? SymbolRegular.EyeOff24 : SymbolRegular.Eye24;
+        RevealButton.ToolTip = _passwordVisible ? "Ocultar senha" : "Exibir senha";
     }
 
     private static bool TrySite(string value, out Uri? uri) => Uri.TryCreate(value, UriKind.Absolute, out uri)
@@ -194,21 +248,21 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         { Status.Text = "Não foi possível abrir o navegador."; }
     }
 
-    private bool CanDiscard() => !_dirty || MessageBox.Show(this,
-        "Descartar as alterações ainda não salvas?", "Alterações pendentes", MessageBoxButton.YesNo,
-        MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
+    private bool CanDiscard() => !_dirty || AppDialogWindow.Confirm(this,
+        "Descartar alterações?", "Você fez alterações nesta conta que ainda não foram salvas. Se descartar, elas serão perdidas.",
+        "Descartar alterações", "Continuar editando", destructive: true);
 
     private void OnSelect(object sender, SelectionChangedEventArgs e)
     {
-        if (_refreshing || Entries.SelectedItem is not VaultEntry entry) return;
+        if (_refreshing || Entries.SelectedItem is not EntryRow row) return;
         if (!CanDiscard())
         {
             _refreshing = true;
-            Entries.SelectedItem = Entries.Items.OfType<VaultEntry>().FirstOrDefault(x => x.Id == _draft?.Id);
+            Entries.SelectedItem = Entries.Items.OfType<EntryRow>().FirstOrDefault(x => x.Id == _draft?.Id);
             _refreshing = false;
             return;
         }
-        LoadEntry(entry, false);
+        LoadEntry(row.Entry, false);
     }
 
     private void OnSearch(object sender, TextChangedEventArgs e) { if (!_refreshing && Entries is not null) Refresh(); }
@@ -219,7 +273,7 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     internal void SelectSection(string section)
     {
         if (!CanDiscard()) { UpdateNavigation(); return; }
-        _editing = _dirty = _new = false;
+        ClearSelection();
         _filter = section; _folder = null;
         Heading.Text = _filter switch { "favorites" => "Favoritos", "totp" => "Autenticador", "security" => "Segurança", _ => "Minhas contas" };
         Refresh();
@@ -228,7 +282,7 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         if (_refreshing || Folders.SelectedItem is not string folder) return;
         if (!CanDiscard()) { Refresh(); return; }
-        _editing = _dirty = _new = false;
+        ClearSelection();
         _folder = folder; _filter = "all"; Heading.Text = folder; Refresh();
     }
     private void OnNew(object sender, RoutedEventArgs e)
@@ -262,19 +316,40 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     }
     private void OnDelete(object sender, RoutedEventArgs e)
     {
-        if (_draft is null || _new || MessageBox.Show(this, "Excluir esta entrada permanentemente?", "Excluir entrada",
-                MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+        if (_draft is null || _new || !AppDialogWindow.Confirm(this, "Excluir esta conta?",
+                "A conta será removida do seu cofre. Esta ação não pode ser desfeita.", "Excluir conta", "Manter conta",
+                destructive: true, context: _draft.Title) || _draft is null || !App.Services.Vault.IsUnlocked) return;
         try { App.Services.Vault.Delete(_draft.Id); _draft = null; _dirty = false; _editing = false; Refresh(); Status.Text = "Conta excluída."; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Status.Text = "Não foi possível excluir a entrada."; }
     }
-    private void Copy(string value, string label)
+    private void Copy(string value, string label, FrameworkElement? target)
     {
-        if (!App.Services.Vault.IsUnlocked || value.Length == 0) return;
-        App.Services.Clipboard.CopySensitive(value, App.Services.Settings.Current.ClipboardClearSeconds);
-        Status.Text = label + " copiado.";
+        if (!App.Services.Vault.IsUnlocked) return;
+        if (value.Length == 0) { Status.Text = "Não há conteúdo para copiar."; return; }
+        try
+        {
+            App.Services.Clipboard.CopySensitive(value, App.Services.Settings.Current.ClipboardClearSeconds);
+            Status.Text = label + ".";
+            if (target is not null) ShowCopyFeedback(target, label);
+        }
+        catch (System.Runtime.InteropServices.COMException) { Status.Text = "A área de transferência está ocupada. Tente novamente."; }
     }
-    private void OnCopyPassword(object sender, RoutedEventArgs e) => Copy(_editing ? PasswordInput.Password : _draft?.Password ?? "", "Senha");
-    private void OnCopyUser(object sender, RoutedEventArgs e) => Copy(_editing ? UserInput.Text : _draft?.Username ?? "", "Usuário");
+    internal void ShowCopyFeedback(FrameworkElement target, string label)
+    {
+        CopyFeedback.PlacementTarget = target;
+        CopyFeedbackText.Text = label;
+        CopyFeedback.IsOpen = true;
+        _copyTimer.Stop(); _copyTimer.Start();
+    }
+    private void HideCopyFeedback()
+    {
+        _copyTimer.Stop();
+        CopyFeedback.IsOpen = false;
+        CopyFeedback.PlacementTarget = null;
+        CopyFeedbackText.Text = "";
+    }
+    private void OnCopyPassword(object sender, RoutedEventArgs e) => Copy(_editing ? PasswordInput.Password : _draft?.Password ?? "", "Senha copiada", sender as FrameworkElement);
+    private void OnCopyUser(object sender, RoutedEventArgs e) => Copy(_editing ? UserInput.Text : _draft?.Username ?? "", "Usuário copiado", sender as FrameworkElement);
     private void OnGenerate(object sender, RoutedEventArgs e) => PasswordInput.Password = PasswordGenerator.Generate(GeneratorView.LastOptions);
     private void OnPasswordChanged(object sender, RoutedEventArgs e)
     {
@@ -300,7 +375,7 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     }
     private void OnCopyTotp(object sender, RoutedEventArgs e)
     {
-        try { Copy(Totp.Generate(Totp.Parse(TotpInput.Password), DateTimeOffset.UtcNow), "Código TOTP"); }
+        try { Copy(Totp.Generate(Totp.Parse(TotpInput.Password), DateTimeOffset.UtcNow), "Código copiado", sender as FrameworkElement); }
         catch (Exception ex) when (ex is FormatException or OverflowException) { Status.Text = "Informe uma chave TOTP válida."; }
     }
     private void OnQuick(object sender, RoutedEventArgs e) => ((App)Application.Current).OpenQuickPanel();
@@ -317,9 +392,11 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         if (!_forceClose)
         {
             e.Cancel = true;
+            if (!_editing && !_dirty) ClearSelection();
             _passwordVisible = false;
             SummaryPassword.Text = _draft?.Password.Length > 0 ? "••••••••••••" : "";
-            RevealButton.Content = "Exibir";
+            RevealIcon.Symbol = SymbolRegular.Eye24;
+            RevealButton.ToolTip = "Exibir senha";
             Hide();
             if (!App.Services.Settings.Current.TrayCloseNoticeShown)
             {
@@ -333,6 +410,7 @@ internal partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     public void ForceClose()
     {
         _clock.Stop(); _forceClose = true;
+        HideCopyFeedback();
         App.Services.Vault.Unlocked -= ScheduleRefresh; App.Services.Vault.Changed -= ScheduleRefresh;
         App.Services.Vault.Locked -= OnVaultLocked;
         Close();

@@ -77,6 +77,7 @@ internal static class ThemeService
         Brush("MainMutedBrush", dark ? "#A8AEA1" : "#626B5C");
         Brush("MainAccentInkBrush", dark ? "#1A2113" : "#FFFFFF");
         Brush("MainDangerBrush", dark ? "#D8A08B" : "#9A492E");
+        Brush("MainDangerFillBrush", "#93472F");
         Brush("TextOnAccentFillColorPrimaryBrush", dark ? "#1A2113" : "#FFFFFF");
         Brush("TextOnAccentFillColorSecondaryBrush", dark ? "#1A2113" : "#FFFFFF");
     }

@@ -61,20 +61,22 @@ internal sealed class BrowserBridge : IDisposable
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException or KeyNotFoundException)
         { return Error("Integração não registrada. Execute tools/register-extension.ps1."); }
 
-        var response = new BrowserAccess(App.Services.Vault, Confirm).Handle(request, cancellationToken);
+        var response = new BrowserAccess(App.Services.Vault, approval => Confirm(approval, cancellationToken)).Handle(request, cancellationToken);
         return response;
     }
 
-    private static bool Confirm(BrowserApproval approval)
+    private static bool Confirm(BrowserApproval approval, CancellationToken cancellationToken)
     {
         ((App)Application.Current).OpenMainWindow();
         var owner = Application.Current.Windows.OfType<Views.MainWindow>().FirstOrDefault();
-        var verb = approval.Action == "fill" ? "Liberar esta senha para preenchimento" : "Salvar estas credenciais no cofre";
-        var prompt = $"{verb}?\n\nSite: {approval.Origin}\nEntrada: {SafeLabel(approval.Title)}\nUsuário: {SafeLabel(approval.Username)}\n\nConfira o domínio antes de permitir.";
-        var approved = owner is null ? MessageBoxResult.No : MessageBox.Show(owner, prompt, "Cofre — solicitação do navegador",
-            MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
-        if (approved == MessageBoxResult.Yes) App.Services.IdleLock.Touch();
-        return approved == MessageBoxResult.Yes;
+        var fill = approval.Action == "fill";
+        var context = $"Site: {approval.Origin}\nConta: {SafeLabel(approval.Title)}\nUsuário: {SafeLabel(approval.Username)}";
+        var approved = owner is not null && Views.AppDialogWindow.Confirm(owner,
+            fill ? "Preencher neste site?" : "Salvar esta conta?",
+            fill ? "Confira o domínio abaixo antes de liberar suas credenciais para o navegador." : "Confira os dados abaixo. Uma nova conta será criada no seu cofre.",
+            fill ? "Permitir preenchimento" : "Salvar no cofre", context: context, cancellationToken: cancellationToken);
+        if (approved) App.Services.IdleLock.Touch();
+        return approved;
     }
     private static string SafeLabel(string text) => new(text.Where(c => !char.IsControl(c)
         && System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.Format).Take(150).ToArray());
