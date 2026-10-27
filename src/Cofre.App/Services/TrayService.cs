@@ -17,11 +17,13 @@ internal sealed class TrayService : IDisposable
         var menu = new WinForms.ContextMenuStrip { ShowImageMargin = false };
         var open = new WinForms.ToolStripMenuItem("Abrir cofre") { Font = new Drawing.Font(menu.Font, Drawing.FontStyle.Bold) };
         open.Click += (_, _) => ToggleRequested?.Invoke();
+        var main = new WinForms.ToolStripMenuItem("Janela principal");
+        main.Click += (_, _) => MainRequested?.Invoke();
         _lockItem = new WinForms.ToolStripMenuItem("Bloquear agora");
         _lockItem.Click += (_, _) => LockRequested?.Invoke();
         var exit = new WinForms.ToolStripMenuItem("Sair");
         exit.Click += (_, _) => ExitRequested?.Invoke();
-        menu.Items.AddRange([open, _lockItem, new WinForms.ToolStripSeparator(), exit]);
+        menu.Items.AddRange([main, open, _lockItem, new WinForms.ToolStripSeparator(), exit]);
         ApplyMenuTheme(menu);
 
         _icon = new WinForms.NotifyIcon
@@ -38,6 +40,7 @@ internal sealed class TrayService : IDisposable
     }
 
     public event Action? ToggleRequested;
+    public event Action? MainRequested;
     public event Action? LockRequested;
     public event Action? ExitRequested;
 
@@ -63,8 +66,8 @@ internal sealed class TrayService : IDisposable
     {
         var dark = ThemeService.SystemUsesDarkTheme();
         menu.Renderer = new WinForms.ToolStripProfessionalRenderer(new MenuColors(dark)) { RoundedEdges = false };
-        menu.BackColor = dark ? Drawing.Color.FromArgb(44, 44, 48) : Drawing.Color.White;
-        menu.ForeColor = dark ? Drawing.Color.White : Drawing.Color.FromArgb(30, 30, 30);
+        menu.BackColor = dark ? Drawing.Color.FromArgb(32, 35, 30) : Drawing.Color.FromArgb(251, 250, 245);
+        menu.ForeColor = dark ? Drawing.Color.FromArgb(241, 241, 233) : Drawing.Color.FromArgb(36, 42, 32);
         menu.Font = new Drawing.Font("Segoe UI", 9.5f);
         foreach (WinForms.ToolStripItem item in menu.Items)
         {
@@ -83,9 +86,9 @@ internal sealed class TrayService : IDisposable
 
     private sealed class MenuColors(bool dark) : WinForms.ProfessionalColorTable
     {
-        private readonly Drawing.Color _background = dark ? Drawing.Color.FromArgb(44, 44, 48) : Drawing.Color.White;
-        private readonly Drawing.Color _hover = dark ? Drawing.Color.FromArgb(66, 66, 74) : Drawing.Color.FromArgb(236, 236, 242);
-        private readonly Drawing.Color _border = dark ? Drawing.Color.FromArgb(72, 72, 80) : Drawing.Color.FromArgb(214, 214, 220);
+        private readonly Drawing.Color _background = dark ? Drawing.Color.FromArgb(32, 35, 30) : Drawing.Color.FromArgb(251, 250, 245);
+        private readonly Drawing.Color _hover = dark ? Drawing.Color.FromArgb(48, 57, 39) : Drawing.Color.FromArgb(226, 232, 213);
+        private readonly Drawing.Color _border = dark ? Drawing.Color.FromArgb(53, 57, 48) : Drawing.Color.FromArgb(216, 220, 208);
 
         public override Drawing.Color ToolStripDropDownBackground => _background;
         public override Drawing.Color ImageMarginGradientBegin => _background;

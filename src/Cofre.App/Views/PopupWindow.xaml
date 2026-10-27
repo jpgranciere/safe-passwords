@@ -10,9 +10,9 @@
                  Topmost="True"
                  WindowStartupLocation="Manual"
                  ExtendsContentIntoTitleBar="True"
-                 WindowBackdropType="Acrylic"
-                 WindowCornerPreference="Round"
-                 Background="Transparent">
+                 WindowBackdropType="None"
+                 WindowCornerPreference="DoNotRound"
+                 Background="{DynamicResource MainPanelBrush}">
     <Grid TextElement.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
         <ContentControl x:Name="Host" IsTabStop="False" />
 
@@ -20,7 +20,7 @@
         <Border x:Name="ToastBorder"
                 VerticalAlignment="Bottom" HorizontalAlignment="Center"
                 Margin="16,0,16,78" Padding="14,9"
-                CornerRadius="10" Opacity="0" IsHitTestVisible="False"
+                CornerRadius="0" Opacity="0" IsHitTestVisible="False"
                 Background="#F2242430" BorderBrush="#33FFFFFF" BorderThickness="1">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="18" ShadowDepth="4" Opacity="0.35" />

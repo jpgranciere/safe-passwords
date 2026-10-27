@@ -16,7 +16,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Border Width="38" Height="38" CornerRadius="19" Background="{Binding AvatarBrush}" VerticalAlignment="Center">
+                <Border Width="38" Height="38" CornerRadius="0" Background="{Binding AvatarBrush}" VerticalAlignment="Center">
                     <TextBlock Text="{Binding Initial}" Foreground="White" FontSize="16" FontWeight="SemiBold"
                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
@@ -97,6 +97,9 @@
             <ui:Button Content="Nova senha" Appearance="Primary" Icon="{ui:SymbolIcon Add24}"
                        HorizontalAlignment="Left" Click="OnNew" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource IconButton}" ToolTip="Janela principal" Click="OnMain">
+                    <ui:SymbolIcon Symbol="Window24" FontSize="18" />
+                </Button>
                 <Button Style="{StaticResource IconButton}" ToolTip="Gerador de senhas" Click="OnGenerator">
                     <ui:SymbolIcon Symbol="Password24" FontSize="18" />
                 </Button>

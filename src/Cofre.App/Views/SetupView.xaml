@@ -24,7 +24,7 @@
             <TextBlock x:Name="ErrorText" Visibility="Collapsed" Margin="2,10,0,0" TextWrapping="Wrap" FontSize="12"
                        Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
 
-            <Border Margin="0,16,0,0" Padding="12,10" CornerRadius="9"
+            <Border Margin="0,16,0,0" Padding="12,10" CornerRadius="0"
                     Background="{DynamicResource ControlFillColorDefaultBrush}">
                 <StackPanel Orientation="Horizontal">
                     <ui:SymbolIcon Symbol="Info24" FontSize="16" VerticalAlignment="Top" Margin="0,1,10,0"

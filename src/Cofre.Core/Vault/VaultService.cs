@@ -39,6 +39,7 @@ public sealed class VaultService : IDisposable
 
     /// <summary>Raised after the vault is locked (manually, by idle timeout or by the system).</summary>
     public event Action? Locked;
+    public event Action? Changed;
 
     public IReadOnlyList<VaultEntry> Entries
     {
@@ -47,7 +48,7 @@ public sealed class VaultService : IDisposable
             lock (_gate)
             {
                 RequireUnlocked();
-                return _data!.Entries.ToArray();
+                return _data!.Entries.Select(e => e.Clone()).ToArray();
             }
         }
     }
@@ -120,9 +121,11 @@ public sealed class VaultService : IDisposable
         {
             RequireUnlocked();
             var copy = entry.Clone();
+            if (!string.IsNullOrWhiteSpace(copy.Totp)) Totp.Parse(copy.Totp);
             copy.UpdatedUtc = DateTime.UtcNow;
 
             var index = _data!.Entries.FindIndex(e => e.Id == copy.Id);
+            var previous = index >= 0 ? _data.Entries[index] : null;
             if (index >= 0)
             {
                 copy.CreatedUtc = _data.Entries[index].CreatedUtc;
@@ -134,7 +137,14 @@ public sealed class VaultService : IDisposable
                 _data.Entries.Add(copy);
             }
 
-            Persist();
+            try { Persist(); }
+            catch
+            {
+                if (index >= 0) _data.Entries[index] = previous!;
+                else _data.Entries.Remove(copy);
+                throw;
+            }
+            Changed?.Invoke();
             return copy.Clone();
         }
     }
@@ -144,9 +154,14 @@ public sealed class VaultService : IDisposable
         lock (_gate)
         {
             RequireUnlocked();
-            var removed = _data!.Entries.RemoveAll(e => e.Id == id) > 0;
-            if (removed) Persist();
-            return removed;
+            var index = _data!.Entries.FindIndex(e => e.Id == id);
+            if (index < 0) return false;
+            var previous = _data.Entries[index];
+            _data.Entries.RemoveAt(index);
+            try { Persist(); }
+            catch { _data.Entries.Insert(index, previous); throw; }
+            Changed?.Invoke();
+            return true;
         }
     }
 

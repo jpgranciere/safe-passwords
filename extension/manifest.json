@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Cofre — Senhas locais",
+  "version": "1.2.0",
+  "description": "Preencha e salve logins HTTPS com seu Cofre para Windows. Sem nuvem.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApRHzGQWE7zXwF8glGxoWdpPezGjsUs9ABxY+9lA7usTkuQtNZLmO9Km/r+Vibkm/R8g1RRBXkBLCmPM06tfwRlszUYdiTHW4NwvB8BUTte0UHbyOhqu16jXPHPCZLgNTLb1HmgydG1S+wnPcmP0r2TiBnsnLrHQ+QaNlwByo9ZURuqAj7nja+0Zy9pTG6lYSv3fEsUzTiagPN/3UI8VNBYRgc+W9kzN3oeGvTBgR/nvet1nYXGk+12fXrIZ3eayFPaJ8mHCa9rCiBRzUn83u/1uIUtLsx6E3greQHd+gt6DeOKsNrrrpEGUfyo6HTdkVXLk3Ms6vGOaL4OlYGgW+XQIDAQAB",
+  "permissions": ["activeTab", "scripting", "nativeMessaging"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_popup": "popup.html", "default_title": "Cofre" },
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'" }
+}

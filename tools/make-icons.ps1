@@ -3,19 +3,16 @@
 #   Assets\cofre-open.ico  -> tray icon while the vault is unlocked (green badge)
 # Usage: powershell -ExecutionPolicy Bypass -File tools\make-icons.ps1
 
+$ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $outDir = Join-Path $PSScriptRoot "..\src\Cofre.App\Assets"
 New-Item -ItemType Directory -Force $outDir | Out-Null
 $outDir = (Resolve-Path $outDir).Path
 
-function New-RoundedRect([float]$x, [float]$y, [float]$w, [float]$h, [float]$r) {
+function New-Square([float]$x, [float]$y, [float]$w, [float]$h) {
     $p = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $d = $r * 2
-    $p.AddArc($x, $y, $d, $d, 180, 90)
-    $p.AddArc($x + $w - $d, $y, $d, $d, 270, 90)
-    $p.AddArc($x + $w - $d, $y + $h - $d, $d, $d, 0, 90)
-    $p.AddArc($x, $y + $h - $d, $d, $d, 90, 90)
+    $p.AddRectangle([System.Drawing.RectangleF]::new($x, $y, $w, $h))
     $p.CloseFigure()
     return $p
 }
@@ -29,14 +26,10 @@ function New-IconPng([int]$size, [bool]$unlocked) {
 
     $s = [float]$size
     $margin = $s * 0.04
-    $body = New-RoundedRect $margin $margin ($s - 2 * $margin) ($s - 2 * $margin) ($s * 0.24)
+    $body = New-Square $margin $margin ($s - 2 * $margin) ($s - 2 * $margin)
     $rect = New-Object System.Drawing.RectangleF 0, 0, $s, $s
-    $grad = New-Object System.Drawing.Drawing2D.LinearGradientBrush $rect, ([System.Drawing.Color]::FromArgb(255, 150, 120, 255)), ([System.Drawing.Color]::FromArgb(255, 84, 52, 240)), 55.0
+    $grad = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 77, 97, 59))
     $g.FillPath($grad, $body)
-
-    # soft highlight on the upper half
-    $hi = New-Object System.Drawing.Drawing2D.LinearGradientBrush $rect, ([System.Drawing.Color]::FromArgb(70, 255, 255, 255)), ([System.Drawing.Color]::FromArgb(0, 255, 255, 255)), 90.0
-    $g.FillPath($hi, $body)
 
     # keyhole: circle + tapered stem
     $white = [System.Drawing.Brushes]::White
@@ -45,7 +38,7 @@ function New-IconPng([int]$size, [bool]$unlocked) {
     $cy = $s * 0.40
     $g.FillEllipse($white, $cx - $cr, $cy - $cr, 2 * $cr, 2 * $cr)
     $stem = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $stem.AddPolygon(@(
+    $stem.AddPolygon([System.Drawing.PointF[]]@(
         (New-Object System.Drawing.PointF ($cx - $s * 0.065), ($cy + $cr * 0.55)),
         (New-Object System.Drawing.PointF ($cx + $s * 0.065), ($cy + $cr * 0.55)),
         (New-Object System.Drawing.PointF ($cx + $s * 0.115), ($s * 0.73)),
@@ -56,9 +49,9 @@ function New-IconPng([int]$size, [bool]$unlocked) {
         $br = $s * 0.19
         $bx = $s * 0.76
         $by = $s * 0.76
-        $ring = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 40, 24, 120))
+        $ring = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 26, 28, 24))
         $g.FillEllipse($ring, $bx - $br - $s * 0.035, $by - $br - $s * 0.035, 2 * ($br + $s * 0.035), 2 * ($br + $s * 0.035))
-        $green = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 34, 197, 94))
+        $green = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 186, 201, 154))
         $g.FillEllipse($green, $bx - $br, $by - $br, 2 * $br, 2 * $br)
     }
 

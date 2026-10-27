@@ -18,7 +18,7 @@
         </Grid>
 
         <StackPanel Grid.Row="1" Margin="4,0">
-            <Border Padding="16,18" CornerRadius="12" MinHeight="96"
+            <Border Padding="16,18" CornerRadius="0" MinHeight="96"
                     Background="{DynamicResource ControlFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <TextBlock x:Name="PasswordText" FontFamily="Cascadia Mono, Consolas" FontSize="20"

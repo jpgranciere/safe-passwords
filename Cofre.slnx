@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Cofre.App/Cofre.App.csproj" />
     <Project Path="src/Cofre.Core/Cofre.Core.csproj" />
+    <Project Path="src/Cofre.NativeHost/Cofre.NativeHost.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Cofre.Core.Tests/Cofre.Core.Tests.csproj" />

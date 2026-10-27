@@ -20,6 +20,7 @@ internal sealed class AppSettings
 
     /// <summary>System | Dark | Light</summary>
     public string Theme { get; set; } = "System";
+    public bool TrayCloseNoticeShown { get; set; }
 
     public string HotkeyText => FormatHotkey(HotkeyModifiers, HotkeyVirtualKey);
 

@@ -20,14 +20,10 @@ internal sealed class EntryRow : ListRow
 {
     private static readonly Brush[] Avatars =
     [
-        Gradient("#818CF8", "#4F46E5"), // indigo
-        Gradient("#C084FC", "#7E22CE"), // purple
-        Gradient("#F472B6", "#DB2777"), // pink
-        Gradient("#FB7185", "#E11D48"), // rose
-        Gradient("#FBBF24", "#D97706"), // amber
-        Gradient("#34D399", "#059669"), // emerald
-        Gradient("#2DD4BF", "#0D9488"), // teal
-        Gradient("#38BDF8", "#0284C7"), // sky
+        Tone("#586B44"),
+        Tone("#7A624B"),
+        Tone("#66705D"),
+        Tone("#806F3E"),
     ];
 
     public EntryRow(VaultEntry entry)
@@ -54,12 +50,9 @@ internal sealed class EntryRow : ListRow
         return hash == int.MinValue ? 0 : hash;
     }
 
-    private static Brush Gradient(string from, string to)
+    private static Brush Tone(string color)
     {
-        var brush = new LinearGradientBrush(
-            (Color)ColorConverter.ConvertFromString(from),
-            (Color)ColorConverter.ConvertFromString(to),
-            new Point(0, 0), new Point(1, 1));
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
         brush.Freeze();
         return brush;
     }

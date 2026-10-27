@@ -1,7 +1,7 @@
 namespace Cofre.App.Services;
 
 /// <summary>
-/// Only one tray process per Windows session. Starting the exe again just asks the running one to open its popup,
+/// Only one tray process per Windows session. Starting the exe again asks the running one to open its main window,
 /// so a desktop shortcut works as a "show my vault" button.
 /// </summary>
 internal sealed class SingleInstance : IDisposable

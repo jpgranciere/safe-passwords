@@ -9,11 +9,11 @@ internal partial class StrengthBar : UserControl
 {
     private static readonly (string Label, Color Color)[] Levels =
     [
-        ("Muito fraca", Color.FromRgb(0xEF, 0x44, 0x44)),
-        ("Fraca", Color.FromRgb(0xF9, 0x73, 0x16)),
-        ("Razoável", Color.FromRgb(0xEA, 0xB3, 0x08)),
-        ("Forte", Color.FromRgb(0x22, 0xC5, 0x5E)),
-        ("Excelente", Color.FromRgb(0x10, 0xB9, 0x81)),
+        ("Muito fraca", Color.FromRgb(0xB6, 0x62, 0x4B)),
+        ("Fraca", Color.FromRgb(0xBB, 0x7D, 0x4F)),
+        ("Razoável", Color.FromRgb(0xA7, 0x8B, 0x43)),
+        ("Forte", Color.FromRgb(0x88, 0x9C, 0x67)),
+        ("Excelente", Color.FromRgb(0x9C, 0xB5, 0x77)),
     ];
 
     private static readonly Brush Inactive = Frozen(Color.FromArgb(0x38, 0x80, 0x80, 0x80));

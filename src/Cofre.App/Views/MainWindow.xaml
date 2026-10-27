@@ -1,0 +1,183 @@
+<ui:FluentWindow x:Class="Cofre.App.Views.MainWindow" x:ClassModifier="internal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Cofre" Width="1240" Height="820" MinWidth="1040" MinHeight="720"
+        ExtendsContentIntoTitleBar="True" WindowBackdropType="None" WindowCornerPreference="DoNotRound"
+        WindowStartupLocation="CenterScreen" Background="{DynamicResource MainCanvasBrush}"
+        Foreground="{DynamicResource MainInkBrush}" FontFamily="Segoe UI" FontSize="14"
+        SnapsToDevicePixels="True" UseLayoutRounding="True">
+    <Grid Background="{DynamicResource MainCanvasBrush}" TextElement.Foreground="{DynamicResource MainInkBrush}">
+        <Grid.RowDefinitions><RowDefinition Height="46"/><RowDefinition Height="*"/><RowDefinition Height="32"/></Grid.RowDefinitions>
+        <Border BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,0,0,1" Background="{DynamicResource MainSidebarBrush}">
+            <ui:TitleBar x:Name="WindowTitleBar" Title="COFRE" ShowMinimize="True" ShowMaximize="True" ShowClose="True"
+                         ForceShutdown="False" Foreground="{DynamicResource MainInkBrush}" ButtonsForeground="{DynamicResource MainInkBrush}"/>
+        </Border>
+        <Grid Grid.Row="1" x:Name="Workspace">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="204"/><ColumnDefinition Width="*" MinWidth="330"/><ColumnDefinition Width="430"/></Grid.ColumnDefinitions>
+            <Border Background="{DynamicResource MainSidebarBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,0,1,0">
+                <DockPanel Margin="12,0">
+                    <StackPanel DockPanel.Dock="Top">
+                        <StackPanel Margin="16,30,0,24">
+                            <TextBlock Text="SEU ESPAÇO" Style="{StaticResource Eyebrow}"/>
+                            <TextBlock Text="Cofre pessoal" FontSize="19" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                        </StackPanel>
+                        <RadioButton x:Name="AllNav" GroupName="Navigation" Style="{StaticResource NavItem}" Tag="all" Click="OnFilter">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Key24" FontSize="17" Margin="0,0,12,0"/><TextBlock Text="Minhas contas"/></StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="FavoritesNav" GroupName="Navigation" Style="{StaticResource NavItem}" Tag="favorites" Click="OnFilter">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Star24" FontSize="17" Margin="0,0,12,0"/><TextBlock Text="Favoritos"/></StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="TotpNav" GroupName="Navigation" Style="{StaticResource NavItem}" Tag="totp" Click="OnFilter">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Clock24" FontSize="17" Margin="0,0,12,0"/><TextBlock Text="Autenticador"/></StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="SecurityNav" GroupName="Navigation" Style="{StaticResource NavItem}" Tag="security" Click="OnFilter">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Shield24" FontSize="17" Margin="0,0,12,0"/><TextBlock Text="Segurança"/></StackPanel>
+                        </RadioButton>
+                        <TextBlock Text="PASTAS" Style="{StaticResource Eyebrow}" Margin="16,32,0,10"/>
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Margin="8,18,8,22">
+                        <Button Content="Painel rápido" Style="{StaticResource FlatButton}" Click="OnQuick" Margin="0,0,0,8"/>
+                        <Button Content="Extensão do navegador" Style="{StaticResource FlatButton}" Click="OnExtension" Margin="0,0,0,8" Padding="8,9"/>
+                        <Button Style="{StaticResource FlatButton}" Click="OnLock"><StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="LockClosed24" FontSize="15" Margin="0,0,8,0"/><TextBlock Text="Bloquear cofre"/></StackPanel></Button>
+                    </StackPanel>
+                    <ListBox x:Name="Folders" SelectionChanged="OnFolder" Background="Transparent" BorderThickness="0"
+                             ItemContainerStyle="{StaticResource MainRow}" Padding="10,0" Foreground="{DynamicResource MainInkBrush}">
+                        <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" Padding="8,10" TextTrimming="CharacterEllipsis"/></DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+            <Grid Grid.Column="1" Margin="28,28,28,20">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="BIBLIOTECA" Style="{StaticResource Eyebrow}"/>
+                        <TextBlock x:Name="Heading" Text="Minhas contas" FontSize="27" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" x:Name="NewButton" Style="{StaticResource PrimaryButton}" Content="+ Adicionar" Click="OnNew" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                </Grid>
+                <TextBlock x:Name="Counts" Grid.Row="1" Foreground="{DynamicResource MainMutedBrush}" FontSize="12" Margin="0,12,0,24"/>
+                <Border x:Name="AuditCard" Grid.Row="2" Background="{DynamicResource MainPanelBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="1" Padding="18" Margin="0,0,0,20" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="Saúde das senhas" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="AuditSummary" TextWrapping="Wrap" Margin="0,12,0,12"/>
+                        <TextBlock Text="Análise local de força e repetição. TOTP não cadastrado não significa ausência de 2FA no site. Não consulta vazamentos." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MainMutedBrush}"/>
+                    </StackPanel>
+                </Border>
+                <ui:TextBox Grid.Row="3" x:Name="Search" PlaceholderText="Buscar contas, pastas ou tags" ToolTip="Buscar por nome, usuário, site, pasta ou tag" TextChanged="OnSearch" Margin="0,0,0,20" MinHeight="40"/>
+                <Grid Grid.Row="4">
+                    <ListBox x:Name="Entries" SelectionChanged="OnSelect" Background="Transparent" BorderThickness="0" Padding="0" HorizontalContentAlignment="Stretch" ItemContainerStyle="{StaticResource MainRow}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate><DataTemplate>
+                            <Grid Margin="18,18">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="36"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <ui:SymbolIcon Symbol="Key24" FontSize="21" Foreground="{DynamicResource BrandBrush}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Username}" FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,5,0,0"/>
+                                    <TextBlock Text="{Binding Folder}" FontSize="11" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel x:Name="Empty" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" Margin="12">
+                        <ui:SymbolIcon Symbol="Key24" FontSize="30" Foreground="{DynamicResource MainMutedBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Nenhuma conta por aqui" FontSize="17" FontWeight="SemiBold" TextAlignment="Center" Margin="0,16,0,8"/>
+                        <TextBlock Text="Adicione uma conta ou ajuste a busca." FontSize="12" TextAlignment="Center" Foreground="{DynamicResource MainMutedBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+            <Border Grid.Column="2" Background="{DynamicResource MainPanelBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="1,0,0,0">
+                <Grid Margin="26,28,26,22">
+                    <DockPanel>
+                        <StackPanel x:Name="EditorActions" DockPanel.Dock="Bottom" Margin="0,18,0,0" Visibility="Collapsed">
+                            <Border Height="1" Background="{DynamicResource MainLineBrush}" Margin="0,0,0,14"/>
+                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Button x:Name="SaveButton" Content="Salvar" Style="{StaticResource PrimaryButton}" Click="OnSave" Margin="0,0,8,0"/>
+                                <Button Grid.Column="1" x:Name="CancelButton" Content="Cancelar" Style="{StaticResource FlatButton}" Click="OnDiscard" Margin="0,0,8,0"/>
+                                <Button Grid.Column="2" Content="Excluir" x:Name="DeleteButton" Style="{StaticResource FlatButton}" Foreground="{DynamicResource MainDangerBrush}" Click="OnDelete"/>
+                            </Grid>
+                        </StackPanel>
+                        <ScrollViewer x:Name="DetailScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,0">
+                            <Grid>
+                                <StackPanel x:Name="ReadPanel">
+                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="DETALHES DA CONTA" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="1" x:Name="EditButton" Content="Editar" Style="{StaticResource FlatButton}" Click="OnEdit" Padding="12,7"/>
+                                    </Grid>
+                                    <TextBlock x:Name="SummaryTitle" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,18,0,8"/>
+                                    <TextBlock x:Name="SummaryMeta" Foreground="{DynamicResource MainMutedBrush}" FontSize="12"/>
+                                    <Border Height="1" Background="{DynamicResource MainLineBrush}" Margin="0,24,0,0"/>
+                                    <TextBlock Text="USUÁRIO / E-MAIL" Style="{StaticResource DetailLabel}"/>
+                                    <TextBlock x:Name="SummaryUser" Style="{StaticResource DetailValue}"/>
+                                    <Button Content="Copiar usuário" Style="{StaticResource FlatButton}" Click="OnCopyUser" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                                    <TextBlock Text="SENHA" Style="{StaticResource DetailLabel}"/>
+                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="SummaryPassword" Text="••••••••••••" FontFamily="Consolas" FontSize="19" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        <Button Grid.Column="1" x:Name="RevealButton" Content="Exibir" Style="{StaticResource FlatButton}" Click="OnReveal" Padding="10,6" Margin="8,0,0,0"/>
+                                    </Grid>
+                                    <TextBlock x:Name="SummaryStrength" Foreground="{DynamicResource MainMutedBrush}" FontSize="12" Margin="0,6,0,0"/>
+                                    <Button Content="Copiar senha" Style="{StaticResource PrimaryButton}" Click="OnCopyPassword" HorizontalAlignment="Left" Margin="0,14,0,0"/>
+                                    <Border x:Name="TotpCard" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,1,0,1" Padding="0,18" Margin="0,24,0,0" Visibility="Collapsed">
+                                        <StackPanel>
+                                            <TextBlock Text="CÓDIGO DE VERIFICAÇÃO" Style="{StaticResource Eyebrow}"/>
+                                            <TextBlock x:Name="TotpCode" FontSize="30" FontFamily="Consolas" Foreground="{DynamicResource BrandBrush}" Margin="0,8,0,0"/>
+                                            <TextBlock x:Name="TotpTime" Foreground="{DynamicResource MainMutedBrush}" FontSize="12"/>
+                                            <Button Content="Copiar código" Style="{StaticResource FlatButton}" Click="OnCopyTotp" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <TextBlock Text="ENDEREÇO DO SITE" Style="{StaticResource DetailLabel}"/>
+                                    <TextBlock x:Name="SummarySite" Style="{StaticResource DetailValue}"/>
+                                    <Button x:Name="OpenSiteButton" Content="Abrir site ↗" Style="{StaticResource FlatButton}" Click="OnOpenSite" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                                    <TextBlock Text="PASTA E TAGS" Style="{StaticResource DetailLabel}"/>
+                                    <TextBlock x:Name="SummaryOrganization" Style="{StaticResource DetailValue}"/>
+                                    <TextBlock Text="NOTAS" Style="{StaticResource DetailLabel}"/>
+                                    <TextBlock x:Name="SummaryNotes" Style="{StaticResource DetailValue}"/>
+                                    <TextBlock x:Name="SummaryFinding" Foreground="{DynamicResource MainDangerBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,20,0,0"/>
+                                </StackPanel>
+                                <StackPanel x:Name="Editor" Visibility="Collapsed">
+                                    <TextBlock Text="EDITAR INFORMAÇÕES" Style="{StaticResource Eyebrow}"/>
+                                    <TextBlock x:Name="EditorHeading" Text="Editar conta" FontSize="25" FontWeight="SemiBold" Margin="0,8,0,12"/>
+                                    <TextBlock Text="Nome da conta" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="TitleInput" MaxLength="200" PlaceholderText="Ex.: E-mail pessoal"/>
+                                    <TextBlock Text="Usuário / e-mail" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="UserInput" MaxLength="1000"/>
+                                    <TextBlock Text="Senha" Style="{StaticResource FieldLabel}"/>
+                                    <ui:PasswordBox x:Name="PasswordInput" MinHeight="36" PasswordChanged="OnPasswordChanged"/>
+                                    <TextBlock x:Name="StrengthText" Style="{StaticResource MutedText}" Margin="0,6,0,10"/>
+                                    <Button Content="Gerar senha" Style="{StaticResource FlatButton}" Click="OnGenerate" HorizontalAlignment="Left"/>
+                                    <TextBlock Text="Endereço do site" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="UrlInput" MaxLength="2048" PlaceholderText="https://exemplo.com"/>
+                                    <TextBlock Text="Pasta" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="FolderInput" MaxLength="100"/>
+                                    <TextBlock Text="Tags (separadas por vírgulas)" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="TagsInput" MaxLength="500"/>
+                                    <CheckBox x:Name="FavoriteInput" Content="Favorito" Margin="0,18,0,0"/>
+                                    <TextBlock Text="Notas" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="NotesInput" AcceptsReturn="True" TextWrapping="Wrap" Height="85" VerticalScrollBarVisibility="Auto"/>
+                                    <TextBlock Text="CÓDIGO DE VERIFICAÇÃO — 2FA" Style="{StaticResource Eyebrow}" Margin="0,24,0,10"/>
+                                    <TextBlock Text="Chave Base32 ou endereço otpauth://totp do serviço. A chave será criptografada no cofre." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MainMutedBrush}" Margin="0,0,0,10"/>
+                                    <ui:PasswordBox x:Name="TotpInput" MinHeight="36" MaxLength="4096" PasswordChanged="OnTotpChanged"/>
+                                    <TextBlock x:Name="FindingText" Foreground="{DynamicResource MainDangerBrush}" TextWrapping="Wrap" FontSize="12" Margin="0,16,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+                    </DockPanel>
+                    <StackPanel x:Name="NoSelection" VerticalAlignment="Center" Margin="16" Visibility="Collapsed">
+                        <ui:SymbolIcon Symbol="ShieldKeyhole24" FontSize="32" Foreground="{DynamicResource MainMutedBrush}" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Tudo no seu lugar." FontSize="23" FontWeight="SemiBold" Margin="0,20,0,10"/>
+                        <TextBlock Text="Selecione uma conta para consultar os detalhes ou adicione uma nova." TextWrapping="Wrap" Foreground="{DynamicResource MainMutedBrush}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+        <Border Grid.Row="1" x:Name="LockedOverlay" Background="{DynamicResource MainCanvasBrush}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="380">
+                <ui:SymbolIcon Symbol="ShieldLock24" FontSize="40" Foreground="{DynamicResource BrandBrush}" HorizontalAlignment="Center"/>
+                <TextBlock Text="Seu cofre está protegido." FontSize="28" FontWeight="SemiBold" TextAlignment="Center" Margin="0,24,0,0"/>
+                <TextBlock Text="Desbloqueie para acessar suas contas e códigos de verificação." TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource MainMutedBrush}" Margin="0,14,0,26"/>
+                <Button Content="Desbloquear cofre" Style="{StaticResource PrimaryButton}" Click="OnQuick" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="2" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,1,0,0" Background="{DynamicResource MainSidebarBrush}">
+            <Grid Margin="18,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="LOCAL · CRIPTOGRAFADO" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" x:Name="Status" FontSize="12" Margin="24,0,20,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource BrandBrush}" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                <TextBlock Grid.Column="2" Text="COFRE / 1.2" Style="{StaticResource Eyebrow}" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
+</ui:FluentWindow>

@@ -20,7 +20,8 @@ public static class EntryMatcher
 
         foreach (var term in query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
         {
-            if (!Contains(entry.Title, term) && !Contains(entry.Username, term) && !Contains(entry.Url, term))
+            if (!Contains(entry.Title, term) && !Contains(entry.Username, term) && !Contains(entry.Url, term)
+                && !Contains(entry.Folder, term) && !Contains(entry.Tags, term))
                 return false;
         }
 

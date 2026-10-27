@@ -9,6 +9,10 @@ public sealed class VaultEntry
     public string Url { get; set; } = "";
     public string Notes { get; set; } = "";
     public bool Favorite { get; set; }
+    public string Folder { get; set; } = "";
+    public string Tags { get; set; } = "";
+    // A Base32 secret or an otpauth://totp URI; encrypted with the rest of the record.
+    public string Totp { get; set; } = "";
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
 

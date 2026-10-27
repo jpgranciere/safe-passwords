@@ -1,4 +1,4 @@
-﻿<Application x:Class="Cofre.App.App"
+<Application x:Class="Cofre.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
@@ -8,16 +8,17 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
+                <ResourceDictionary Source="Design.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <Color x:Key="BrandColor">#7C5CFF</Color>
+            <Color x:Key="BrandColor">#4D613B</Color>
             <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource BrandColor}" />
             <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#9A78FF" Offset="0" />
-                <GradientStop Color="#5B3DF5" Offset="1" />
+                <GradientStop Color="#65794F" Offset="0" />
+                <GradientStop Color="#4D613B" Offset="1" />
             </LinearGradientBrush>
 
-            <!-- Primary buttons keep the vivid brand purple in both themes, so their label is always white. -->
+            <!-- ThemeService supplies the matching accent foreground for each theme. -->
             <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="White" />
             <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="#CCFFFFFF" />
 
@@ -34,7 +35,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="Bd" CornerRadius="8" Background="{TemplateBinding Background}">
+                            <Border x:Name="Bd" CornerRadius="0" Background="{TemplateBinding Background}">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <ControlTemplate.Triggers>
@@ -87,7 +88,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ListBoxItem">
-                            <Border x:Name="Bd" CornerRadius="9" Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <Border x:Name="Bd" CornerRadius="0" Background="Transparent" Padding="{TemplateBinding Padding}">
                                 <ContentPresenter />
                             </Border>
                             <ControlTemplate.Triggers>

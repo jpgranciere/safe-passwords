@@ -170,6 +170,11 @@ internal partial class VaultView : UserControl, IPopupView
     private void OnSettings(object sender, RoutedEventArgs e) => _popup.Navigate(new SettingsView(_popup));
 
     private void OnLock(object sender, RoutedEventArgs e) => App.Services.Vault.Lock();
+    private void OnMain(object sender, RoutedEventArgs e)
+    {
+        _popup.HidePopup();
+        ((App)Application.Current).OpenMainWindow();
+    }
 
     private static T? FindAncestor<T>(DependencyObject start) where T : DependencyObject
     {

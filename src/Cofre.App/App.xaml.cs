@@ -10,6 +10,8 @@ public partial class App : Application
 {
     private SingleInstance? _singleInstance;
     private PopupWindow? _popup;
+    private Views.MainWindow? _main;
+    private BrowserBridge? _browser;
 
     internal static AppServices Services { get; private set; } = null!;
 
@@ -70,7 +72,8 @@ public partial class App : Application
 #if DEBUG
         if (renderDir is not null)
         {
-            Debug.ViewRenderer.RenderAll(_popup, renderDir, renderPassword);
+            try { Debug.ViewRenderer.RenderAll(_popup, renderDir, renderPassword); }
+            catch (Exception ex) { Console.Error.WriteLine(ex.Message); Shutdown(1); return; }
             Shutdown();
             return;
         }
@@ -94,7 +97,7 @@ public partial class App : Application
         tray.ToggleRequested += TogglePopup;
         tray.LockRequested += () => vault.Lock();
         tray.ExitRequested += ExitApp;
-        _singleInstance!.ShowRequested += () => Dispatcher.BeginInvoke(ShowPopup);
+        _singleInstance!.ShowRequested += () => Dispatcher.BeginInvoke(OpenMainWindow);
 
         hotkeys.Pressed += TogglePopup;
         if (!hotkeys.Register(settings.Current.HotkeyModifiers, settings.Current.HotkeyVirtualKey))
@@ -106,7 +109,23 @@ public partial class App : Application
         // First run: there's no vault yet, so open straight into the setup screen.
         if (showAtStart || !vault.Exists)
             Dispatcher.BeginInvoke(ShowPopup, DispatcherPriority.ApplicationIdle);
+
+        _main = new Views.MainWindow();
+        tray.MainRequested += OpenMainWindow;
+        _browser = new BrowserBridge();
+        _browser.Start();
+        OpenMainWindow();
     }
+
+    internal void OpenMainWindow()
+    {
+        if (_main is null) return;
+        _main.Show();
+        if (_main.WindowState == WindowState.Minimized) _main.WindowState = WindowState.Normal;
+        _main.Activate();
+    }
+
+    internal void OpenQuickPanel() => ShowPopup();
 
     private void ShowPopup() => _popup?.ShowAt(Services.Foreground.CurrentTarget);
 
@@ -134,6 +153,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _browser?.Dispose();
+        _main?.ForceClose();
         if (Services is not null)
         {
             Services.IdleLock.Dispose();

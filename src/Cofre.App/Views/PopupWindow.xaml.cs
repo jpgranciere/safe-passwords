@@ -19,7 +19,7 @@ internal interface IPopupView
 }
 
 /// <summary>
-/// The only window of the app: a small acrylic panel that appears next to the tray, hides itself when it loses
+/// A compact panel that appears next to the tray, hides itself when it loses
 /// focus and swaps between screens (setup, unlock, list, editor...).
 /// </summary>
 internal partial class PopupWindow : FluentWindow
@@ -113,7 +113,7 @@ internal partial class PopupWindow : FluentWindow
     {
         ToastText.Text = message;
         ToastIcon.Symbol = isError ? SymbolRegular.ErrorCircle24 : SymbolRegular.CheckmarkCircle24;
-        ToastIcon.Foreground = new SolidColorBrush(isError ? Color.FromRgb(0xF8, 0x71, 0x71) : Color.FromRgb(0x4A, 0xDE, 0x80));
+        ToastIcon.Foreground = new SolidColorBrush(isError ? Color.FromRgb(0xD8, 0xA0, 0x8B) : Color.FromRgb(0xBA, 0xC9, 0x9A));
 
         ToastBorder.BeginAnimation(OpacityProperty, new DoubleAnimation(1, TimeSpan.FromMilliseconds(140)));
         _toastTimer.Stop();

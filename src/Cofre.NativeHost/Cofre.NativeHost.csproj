@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <AssemblyName>Cofre.NativeHost</AssemblyName>
+    <Version>1.2.0</Version>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="..\Cofre.Core\Cofre.Core.csproj"/></ItemGroup>
+</Project>

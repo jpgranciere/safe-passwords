@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Cofre</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+  <header><span class="mark">C</span><div><h1>Cofre</h1><span class="muted">Senhas locais, sob seu controle.</span></div></header>
+  <p id="site" class="site">Consultando a página…</p>
+  <p id="status" role="status" aria-live="polite"></p>
+  <section><h2>Logins deste site</h2><div id="entries"></div><button id="refresh" type="button">Atualizar lista</button></section>
+  <details><summary>Salvar uma nova entrada</summary>
+    <p class="muted">Leia o formulário ou preencha os campos. O Cofre pedirá confirmação no Windows.</p>
+    <button id="read" type="button">Ler formulário desta página</button>
+    <form id="save"><label>Título<input id="title" required maxlength="200" autocomplete="off"></label>
+      <label>Usuário<input id="username" maxlength="1000" autocomplete="off"></label>
+      <label>Senha<input id="password" type="password" required maxlength="4096" autocomplete="off"></label>
+      <button type="submit" class="primary">Salvar no Cofre</button>
+    </form>
+  </details>
+  <footer>Preenche apenas a página principal HTTPS e não envia o formulário. Confira a confirmação no aplicativo.</footer>
+  <script src="popup.js" type="module"></script>
+</body></html>
