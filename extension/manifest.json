@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cofre — Senhas locais",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Senhas locais com sugestões nos campos, gerador e preenchimento de login. Integrado ao Cofre para Windows.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApRHzGQWE7zXwF8glGxoWdpPezGjsUs9ABxY+9lA7usTkuQtNZLmO9Km/r+Vibkm/R8g1RRBXkBLCmPM06tfwRlszUYdiTHW4NwvB8BUTte0UHbyOhqu16jXPHPCZLgNTLb1HmgydG1S+wnPcmP0r2TiBnsnLrHQ+QaNlwByo9ZURuqAj7nja+0Zy9pTG6lYSv3fEsUzTiagPN/3UI8VNBYRgc+W9kzN3oeGvTBgR/nvet1nYXGk+12fXrIZ3eayFPaJ8mHCa9rCiBRzUn83u/1uIUtLsx6E3greQHd+gt6DeOKsNrrrpEGUfyo6HTdkVXLk3Ms6vGOaL4OlYGgW+XQIDAQAB",
   "permissions": [

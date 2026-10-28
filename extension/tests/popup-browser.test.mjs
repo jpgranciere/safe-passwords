@@ -47,13 +47,13 @@ test("popup keeps site activation available while the vault request is pending o
   assert.match(await page.locator("#field-status").textContent(), /Ícones ativos/);
   assert.equal(await page.locator("#attach").isEnabled(), true);
 });
-test("popup automatically restores icons for an authorized site and leaves activation independent of fill consent", { skip: !browserPath }, async t => {
+test("popup automatically restores icons and leaves activation available while filling or awaiting unlock", { skip: !browserPath }, async t => {
   const page = await setup(t, true);
   await page.waitForFunction(() => document.querySelector("#field-status").textContent.includes("Ícones ativos"));
   await page.evaluate(() => finishList({ ok: true, pageUrl: "https://example.com/login", entries: [{id:"id",title:"Demo",username:"test-only"}] }));
   await page.locator("#entries button").click();
   await page.waitForFunction(() => !!globalThis.finishFill);
-  assert.match(await page.locator("#status").textContent(), /Alt\+Tab/);
+  assert.match(await page.locator("#status").textContent(), /Preenchendo.*desbloqueie/);
   assert.equal(await page.locator("#attach").isEnabled(), true);
   await page.locator("#attach").click();
   await page.waitForFunction(() => calls.filter(x => x.action === "attach").length === 2);

@@ -33,32 +33,37 @@ public class BrowserAccessTests : IDisposable
     }
 
     [Fact]
-    public void FillRequiresConsentAndExactOrigin()
+    public void FillSkipsDesktopConsentButRequiresExactOrigin()
     {
-        var count = 0;
-        var access = new BrowserAccess(_vault, approval => { count++; Assert.Equal("https://example.com", approval.Origin); return true; });
+        var access = new BrowserAccess(_vault, _ => throw new Exception("Fill must not prompt for desktop consent."));
         var result = Call(access, new { action = "fill", url = "https://example.com/login", id = _entry.Id });
-        Assert.Equal(_entry.Password, result.GetProperty("password").GetString()); Assert.Equal(1, count);
-        Assert.False(Call(access, new { action = "fill", url = "https://evil.test", id = _entry.Id }).GetProperty("ok").GetBoolean());
-        Assert.Equal(1, count);
-        var denied = new BrowserAccess(_vault, _ => false);
-        Assert.DoesNotContain(_entry.Password, Call(denied, new { action = "fill", url = "https://example.com", id = _entry.Id }).ToString());
+        Assert.Equal(_entry.Password, result.GetProperty("password").GetString());
+        foreach (var url in new[] { "https://evil.test", "https://example.com.evil.test", "https://sub.example.com", "https://example.com:444", "http://example.com" })
+        {
+            var rejected = Call(access, new { action = "fill", url, id = _entry.Id });
+            Assert.False(rejected.GetProperty("ok").GetBoolean());
+            Assert.DoesNotContain(_entry.Password, rejected.ToString());
+        }
     }
 
     [Fact]
-    public void LockingDuringConsentDoesNotReleaseTheSecret()
+    public void LockedVaultDoesNotReleaseTheSecret()
     {
-        var access = new BrowserAccess(_vault, _ => { _vault.Lock(); return true; });
+        var access = new BrowserAccess(_vault, _ => throw new Exception("Locked fill must not prompt."));
+        _vault.Lock();
         var result = Call(access, new { action = "fill", url = "https://example.com", id = _entry.Id });
         Assert.False(result.GetProperty("ok").GetBoolean()); Assert.DoesNotContain(_entry.Password, result.ToString());
     }
 
     [Fact]
-    public void EditingDuringConsentRequiresAnotherConfirmation()
+    public void ExpiredFillDoesNotReleaseTheSecret()
     {
-        var access = new BrowserAccess(_vault, _ => { var changed = _entry.Clone(); changed.Password = "replacement-secret"; _vault.Upsert(changed); return true; });
-        var result = Call(access, new { action = "fill", url = "https://example.com", id = _entry.Id });
-        Assert.False(result.GetProperty("ok").GetBoolean()); Assert.DoesNotContain("replacement-secret", result.ToString());
+        var access = new BrowserAccess(_vault, _ => throw new Exception("Fill must not prompt."));
+        using var expiry = new CancellationTokenSource();
+        expiry.Cancel();
+        var request = JsonSerializer.SerializeToElement(new { action = "fill", url = "https://example.com", id = _entry.Id });
+        var result = JsonSerializer.SerializeToElement(access.Handle(request, expiry.Token));
+        Assert.False(result.GetProperty("ok").GetBoolean()); Assert.DoesNotContain(_entry.Password, result.ToString());
     }
 
     [Fact]

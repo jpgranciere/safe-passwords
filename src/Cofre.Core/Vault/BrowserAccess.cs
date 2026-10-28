@@ -6,7 +6,7 @@ namespace Cofre.Core.Vault;
 
 public sealed record BrowserApproval(string Action, string Origin, string Title, string Username);
 
-/// <summary>Browser policy independent of transport/UI. Secrets are released only after explicit approval.</summary>
+/// <summary>Exact-origin browser access. Vault writes require desktop approval.</summary>
 public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool> approve)
 {
     private static object Error(string message) => new { ok = false, error = message };
@@ -50,7 +50,7 @@ public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool
         if (action != "fill" && (string.IsNullOrWhiteSpace(title) || password.Length == 0)) return Error("Informe título e senha.");
 
         if (cancellationToken.IsCancellationRequested
-            || !approve(new BrowserApproval(action, origin, title, username))
+            || (action != "fill" && !approve(new BrowserApproval(action, origin, title, username)))
             || cancellationToken.IsCancellationRequested || !vault.IsUnlocked)
             return Error("Solicitação cancelada ou cofre bloqueado.");
         // The approval UI can pump lock/edit messages. Check fresh state before releasing any credentials.

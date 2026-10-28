@@ -155,7 +155,7 @@
       button.addEventListener("click", event => {
         if (!event.isTrusted) return;
         run(async () => {
-          say("Confirme o domínio no aplicativo Cofre e volte ao navegador.");
+          say("Preenchendo… Se o cofre estiver bloqueado, desbloqueie no aplicativo para continuar.");
           await request("fill", { id: entry.id }); selection.value = entry.id;
           say("Login preenchido. Agora você pode entrar no site.");
         });

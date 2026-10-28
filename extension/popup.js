@@ -44,12 +44,12 @@ async function refresh() {
     const user = document.createElement("span"); user.textContent = entry.username || "Sem usuário";
     button.append(title, user);
     button.addEventListener("click", () => run(async () => {
-      status("Confirme na janela do Cofre que abriu no Windows. Se não estiver visível, use Alt+Tab e procure Preencher neste site? — Cofre.");
+      status("Preenchendo… Se o cofre estiver bloqueado, desbloqueie no aplicativo para continuar.");
       await request({ action: "fill", id: entry.id }); status("Login preenchido. Volte à página para entrar.");
     }));
     $("entries").append(button);
   }
-  status(response.entries.length ? "Selecione um login. O Windows pedirá sua confirmação antes de preencher." : "Nenhum login cadastrado para esta origem exata.");
+  status(response.entries.length ? "Selecione uma conta para preencher o login." : "Nenhum login cadastrado para esta origem exata.");
 }
 $("refresh").addEventListener("click", () => run(refresh));
 $("attach").addEventListener("click", async () => {

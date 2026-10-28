@@ -53,7 +53,7 @@ function reset() {
   inspection = { kind: "login", minLength: 0, maxLength: 128 }; savedSettings = undefined;
   permission = true;
 }
-test("fills through worker after consent and returns no secrets to popup", async () => {
+test("fills through worker and returns no secrets to popup", async () => {
   reset();
   assert.deepEqual(await request({ action: "fill", pageUrl: page.url, id: "entry-id" }), { ok: true });
   assert.equal(nativeRequests[0].url, "https://example.com");

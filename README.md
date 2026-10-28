@@ -7,7 +7,7 @@ para Chrome e Edge com integração nativa local. Nada de nuvem, conta ou servid
 
 ## Como usar
 
-1. Execute `publish\1.3.1\Cofre.exe` ou o atalho **Cofre**. A publicação inclui o runtime necessário.
+1. Execute `publish\1.3.2\Cofre.exe` ou o atalho **Cofre**. A publicação inclui o runtime necessário.
 2. Na primeira vez abre a tela **Crie seu cofre**: defina a senha mestra (mínimo 10 caracteres).
 3. O ícone do cofre fica na bandeja. Para abrir o painel:
    - clique no ícone, ou
@@ -52,6 +52,10 @@ Ctrl+Alt+P continuam abrindo o painel rápido. Fechar a janela mantém o aplicat
 
 Esta versão é instalada em **modo de desenvolvedor**; ainda não está publicada nas lojas dos navegadores.
 
+Na versão 1.3.2, selecionar uma conta preenche o login diretamente, sem uma segunda confirmação no Windows.
+O domínio e a porta continuam sendo verificados. Se o cofre estiver bloqueado, o painel de desbloqueio abre;
+depois da senha mestra, a solicitação continua enquanto estiver válida. Salvar e atualizar contas ainda exigem confirmação.
+
 Na versão 1.3.1, a ativação dos ícones funciona de forma independente das solicitações ao aplicativo, inclusive
 enquanto uma confirmação estiver pendente ou o cofre estiver bloqueado. O popup reativa os ícones em sites já
 autorizados e informa quantos campos visíveis encontrou. Confirmações do navegador aparecem em destaque no Windows,
@@ -67,8 +71,8 @@ com título próprio na barra de tarefas. Depois de atualizar a extensão, recar
    Nas próximas visitas, os ícones aparecem automaticamente. Remova o acesso nas permissões da extensão quando quiser.
 6. Abra e desbloqueie o aplicativo Windows. Na entrada, cadastre a URL completa, por exemplo `https://example.com/login`.
 7. Clique no campo de senha ou na logo do Cofre dentro dele:
-   - **Login:** a lista de contas desse domínio aparece. Escolha a conta e confirme no app o **domínio exato**; o
-     preenchimento continua no worker ao voltar ao navegador. Apenas focar o campo não libera senhas salvas.
+   - **Login:** a lista de contas desse domínio aparece. Escolha a conta para preencher diretamente no **domínio exato**.
+     Se necessário, desbloqueie o cofre no aplicativo para continuar. Apenas focar o campo não libera senhas salvas.
    - **Cadastro:** o painel oferece uma senha aleatória de 20 caracteres. Em **Personalizar senha**, ajuste tamanho
      (12 a 128), letras maiúsculas/minúsculas, números, símbolos permitidos e filtro de caracteres ambíguos. As
      preferências são lembradas neste navegador. **Usar esta senha** também preenche a confirmação quando identificada.
@@ -93,13 +97,13 @@ Restrições deliberadas do preenchimento:
 - Somente HTTPS, origem exata (domínio e porta) e página principal. Cada ícone identifica seu próprio formulário,
   inclusive quando existem vários na página. Não confia em títulos
   de janela nem em correspondências parciais de domínio. Subdomínios diferentes precisam de entradas próprias.
-- Recusa formulários com destino em outra origem e confere novamente a URL após a confirmação. Nunca envia o formulário.
+- Recusa formulários com destino em outra origem e confere novamente a URL antes de preencher. Nunca envia o formulário.
 - Sem preenchimento de iframes, Shadow DOM, fluxos de várias etapas ou passkeys nesta versão.
 - O acesso contínuo é autorizado individualmente por site. O armazenamento local contém apenas preferências do
   gerador; senhas do cofre não são retornadas ao content script. Sugestões geradas ficam na memória do painel por
   até dois minutos e são limpas ao fechá-lo. Não há cópia automática para a área de transferência.
 - Até 20 logins são listados por origem; entradas com usuário acima de 1.000 caracteres ou senha acima de 4.096 devem
-  ser usadas pelo aplicativo. A confirmação expira; se demorar, solicite novamente.
+  ser usadas pelo aplicativo. Solicitações de desbloqueio e confirmação expiram; se demorar, solicite novamente.
 
 Se a conexão falhar, confira se o aplicativo está aberto e desbloqueado e execute
 `pwsh -File tools\register-extension.ps1`. Para remover o registro: `pwsh -File tools\register-extension.ps1 -Uninstall`.
@@ -162,7 +166,7 @@ Parâmetros úteis do executável: `--data-dir <pasta>` (guarda cofre e configur
 `--show` (abre o painel ao iniciar). Em builds **Debug** existe também `--render <pasta> --password <senha>`, que
 desenha todas as telas em PNG sem abrir janela, útil para revisar o visual.
 
-`tools\publish.ps1` publica uma versão independente do runtime em `publish\1.3.1` e o host em sua subpasta `native`.
+`tools\publish.ps1` publica uma versão independente do runtime em `publish\1.3.2` e o host em sua subpasta `native`.
 As bibliotecas nativas do WPF são incluídas com `IncludeNativeLibrariesForSelfExtract=true`; o runtime as extrai ao
 iniciar. Isso evita uma publicação que compila, mas encerra ao criar a janela por falta de DLLs nativas.
 Os atalhos da Área de Trabalho e do menu Iniciar são atualizados durante a publicação. Aceita `-Dotnet <caminho-do-SDK>` e `-OutputDirectory <pasta>`. Feche a versão de destino antes de recompilar.
@@ -171,7 +175,7 @@ Para uma instalação personalizada, registre com `tools\register-extension.ps1 
 Para os testes do host publicado no PowerShell:
 
 ```powershell
-$env:COFRE_NATIVE_HOST = Join-Path (Get-Location) 'publish\1.3.1\native\Cofre.NativeHost.exe'
+$env:COFRE_NATIVE_HOST = Join-Path (Get-Location) 'publish\1.3.2\native\Cofre.NativeHost.exe'
 $env:COFRE_TEST_IDENTITY = [Environment]::UserDomainName + '\' + [Environment]::UserName
 node --test tests/native-host.test.mjs
 ```
