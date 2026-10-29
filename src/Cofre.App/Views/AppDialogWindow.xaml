@@ -26,6 +26,7 @@
             <Border x:Name="ContextBox" Background="{DynamicResource MainCanvasBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,0,0,1" Padding="14" Margin="0,22,0,0" Visibility="Collapsed">
                 <TextBlock x:Name="ContextText" FontSize="14" TextWrapping="Wrap" LineHeight="23"/>
             </Border>
+            <ContentControl x:Name="ExtraHost" Margin="0,22,0,0" Visibility="Collapsed" IsTabStop="False"/>
             <Border Height="1" Background="{DynamicResource MainLineBrush}" Margin="0,28,0,20"/>
             <WrapPanel HorizontalAlignment="Right">
                 <Button x:Name="CancelAction" Style="{StaticResource GhostButton}" Content="Cancelar" IsCancel="True" IsDefault="True" Click="OnCancel" Margin="0,0,10,0"/>

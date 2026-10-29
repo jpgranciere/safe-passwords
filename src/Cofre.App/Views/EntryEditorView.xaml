@@ -23,15 +23,25 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="2,0,8,0">
             <StackPanel>
+                <StackPanel x:Name="KindPanel" Visibility="Collapsed">
+                    <TextBlock Text="Tipo" Style="{StaticResource FieldLabel}" Margin="2,4,0,5" />
+                    <ComboBox x:Name="KindInput" MinHeight="34" HorizontalAlignment="Stretch" AutomationProperties.Name="Tipo de segredo" SelectionChanged="OnKindChanged">
+                        <ComboBoxItem Content="Token de API" />
+                        <ComboBoxItem Content="Chave SSH" />
+                        <ComboBoxItem Content="Chave de recuperação" />
+                        <ComboBoxItem Content="Outro segredo" />
+                    </ComboBox>
+                </StackPanel>
                 <TextBlock Text="Nome" Style="{StaticResource FieldLabel}" Margin="2,4,0,5" />
                 <ui:TextBox x:Name="TitleInput" PlaceholderText="Ex.: Gmail, Banco, Netflix" MaxLength="120"
                             TextChanged="OnAnyChanged" />
                 <TextBlock x:Name="TitleError" Text="Dê um nome para esta entrada." Visibility="Collapsed" FontSize="12"
                            Margin="2,4,0,0" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
 
-                <TextBlock Text="Usuário ou e-mail" Style="{StaticResource FieldLabel}" />
+                <TextBlock x:Name="UserLabel" Text="Usuário ou e-mail" Style="{StaticResource FieldLabel}" />
                 <ui:TextBox x:Name="UsernameInput" PlaceholderText="nome@exemplo.com" MaxLength="200" />
 
+                <StackPanel x:Name="LoginPanel">
                 <TextBlock Text="Senha" Style="{StaticResource FieldLabel}" />
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -44,8 +54,20 @@
                 </Grid>
                 <controls:StrengthBar x:Name="Strength" Margin="0,7,0,0" />
                 <ui:HyperlinkButton Content="Opções do gerador" Padding="2,4" Margin="0,2,0,0" Click="OnOpenGenerator" />
+                </StackPanel>
+                <StackPanel x:Name="SecretPanel" Visibility="Collapsed">
+                    <TextBlock x:Name="SecretLabel" Text="Token" Style="{StaticResource FieldLabel}" />
+                    <ui:TextBox x:Name="SecretInput" AcceptsReturn="True" TextWrapping="Wrap" Height="96" MaxLength="16384"
+                                FontFamily="Consolas" VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"
+                                TextChanged="OnAnyChanged" />
+                    <TextBlock x:Name="SecretError" Text="Informe o valor do segredo." Visibility="Collapsed" FontSize="12"
+                               Margin="2,4,0,0" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+                    <TextBlock Text="Validade (opcional)" Style="{StaticResource FieldLabel}" />
+                    <DatePicker x:Name="ExpiryInput" MinHeight="34" AutomationProperties.Name="Data de validade" />
+                    <TextBlock Text="Avisamos quando faltarem 30 dias ou menos." Style="{StaticResource MutedText}" Margin="2,5,0,0" />
+                </StackPanel>
 
-                <TextBlock Text="Site (opcional)" Style="{StaticResource FieldLabel}" Margin="2,6,0,5" />
+                <TextBlock x:Name="UrlLabel" Text="Site (opcional)" Style="{StaticResource FieldLabel}" Margin="2,6,0,5" />
                 <ui:TextBox x:Name="UrlInput" PlaceholderText="https://exemplo.com" MaxLength="300" />
 
                 <TextBlock Text="Notas (opcional)" Style="{StaticResource FieldLabel}" />

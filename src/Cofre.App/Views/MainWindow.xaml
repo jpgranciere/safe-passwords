@@ -8,6 +8,16 @@
         SnapsToDevicePixels="True" UseLayoutRounding="True">
     <ui:FluentWindow.Resources>
         <Visibility x:Key="AccountMetadataVisibility">Visible</Visibility>
+        <Style x:Key="MetaCell" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource MainMutedBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAlert}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource MainDangerBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </ui:FluentWindow.Resources>
     <Grid Background="{DynamicResource MainCanvasBrush}" TextElement.Foreground="{DynamicResource MainInkBrush}">
         <Grid.RowDefinitions><RowDefinition Height="46"/><RowDefinition Height="*"/><RowDefinition Height="32"/></Grid.RowDefinitions>
@@ -20,10 +30,11 @@
             <Border Background="{DynamicResource MainSidebarBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,0,1,0">
                 <DockPanel Margin="12,0">
                     <StackPanel DockPanel.Dock="Top">
-                        <StackPanel Margin="16,30,0,24">
+                        <StackPanel Margin="16,24,0,16">
                             <TextBlock Text="NESTE DISPOSITIVO" Style="{StaticResource Eyebrow}"/>
                             <TextBlock Text="Cofre pessoal" FontSize="19" FontWeight="SemiBold" Margin="0,6,0,0"/>
                         </StackPanel>
+                        <TextBlock Text="SENHAS" Style="{StaticResource Eyebrow}" Margin="16,0,0,4"/>
                         <RadioButton x:Name="AllNav" GroupName="Navigation" Style="{StaticResource NavItem}" Tag="all" Click="OnFilter">
                             <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Key24" FontSize="17" Margin="0,0,12,0"/><TextBlock Text="Minhas contas"/></StackPanel>
                         </RadioButton>
@@ -36,9 +47,17 @@
                         <RadioButton x:Name="SecurityNav" GroupName="Navigation" Style="{StaticResource NavItem}" Tag="security" Click="OnFilter">
                             <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Shield24" FontSize="17" Margin="0,0,12,0"/><TextBlock Text="Segurança"/></StackPanel>
                         </RadioButton>
-                        <TextBlock Text="PASTAS" Style="{StaticResource Eyebrow}" Margin="16,32,0,10"/>
+                        <TextBlock Text="CHAVES E TOKENS" Style="{StaticResource Eyebrow}" Margin="16,16,0,4"/>
+                        <RadioButton x:Name="SecretsNav" GroupName="Navigation" Style="{StaticResource NavItem}" Tag="secrets" Click="OnFilter">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="ShieldKeyhole24" FontSize="17" Margin="0,0,12,0"/><TextBlock Text="Tokens e chaves"/></StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="ExpiringNav" GroupName="Navigation" Style="{StaticResource NavItem}" Tag="expiring" Click="OnFilter">
+                            <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="CalendarClock24" FontSize="17" Margin="0,0,12,0"/><TextBlock Text="Vencimentos"/>
+                                <TextBlock x:Name="ExpiryBadge" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource MainDangerBrush}" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed" ToolTip="Vencidos ou perto de vencer"/></StackPanel>
+                        </RadioButton>
+                        <TextBlock Text="PASTAS" Style="{StaticResource Eyebrow}" Margin="16,20,0,8"/>
                     </StackPanel>
-                    <StackPanel DockPanel.Dock="Bottom" Margin="8,18,8,22">
+                    <StackPanel DockPanel.Dock="Bottom" Margin="8,10,8,16">
                         <Button Style="{StaticResource GhostButton}" Click="OnQuick" HorizontalContentAlignment="Left" Margin="0,0,0,4" Padding="8,10">
                             <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Keyboard24" FontSize="16" Margin="0,0,10,0"/><TextBlock Text="Painel rápido"/></StackPanel>
                         </Button>
@@ -62,7 +81,11 @@
                     <StackPanel>
                         <TextBlock x:Name="Heading" Text="Minhas contas" FontSize="30" FontWeight="SemiBold" Margin="0"/>
                     </StackPanel>
-                    <Button Grid.Column="1" x:Name="NewButton" Style="{StaticResource PrimaryButton}" Content="+ Adicionar conta" Click="OnNew" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="MoveButton" Style="{StaticResource GhostButton}" Click="OnMoveSecrets" Visibility="Collapsed" Margin="12,0,0,0"
+                                ToolTip="Itens salvos como senha que parecem tokens ou chaves"/>
+                        <Button x:Name="NewButton" Style="{StaticResource PrimaryButton}" Content="+ Adicionar conta" Click="OnNew" Margin="12,0,0,0"/>
+                    </StackPanel>
                 </Grid>
                 <TextBlock x:Name="Counts" Grid.Row="1" Foreground="{DynamicResource MainMutedBrush}" FontSize="12" Margin="0,12,0,24"/>
                 <Border x:Name="AuditCard" Grid.Row="2" Background="{DynamicResource MainPanelBrush}" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="1" Padding="18" Margin="0,0,0,20" Visibility="Collapsed">
@@ -72,15 +95,25 @@
                         <TextBlock Text="Análise local de força e repetição. TOTP não cadastrado não significa ausência de 2FA no site. Não consulta vazamentos." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MainMutedBrush}"/>
                     </StackPanel>
                 </Border>
-                <ui:TextBox Grid.Row="3" x:Name="Search" Icon="{ui:SymbolIcon Search24}" ClearButtonEnabled="True" PlaceholderText="Buscar contas, pastas ou tags" ToolTip="Buscar por nome, usuário, site, pasta ou tag" TextChanged="OnSearch" Margin="0,0,0,20" MinHeight="40"/>
+                <Grid Grid.Row="3" Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <ui:TextBox x:Name="Search" Icon="{ui:SymbolIcon Search24}" ClearButtonEnabled="True" PlaceholderText="Buscar contas, pastas ou tags" ToolTip="Buscar por nome, usuário, site, pasta ou tag" TextChanged="OnSearch" MinHeight="40"/>
+                    <ComboBox Grid.Column="1" x:Name="KindFilter" Width="200" Margin="12,0,0,0" MinHeight="40" Visibility="Collapsed" SelectionChanged="OnKindFilter" AutomationProperties.Name="Filtrar por tipo">
+                        <ComboBoxItem Content="Todos os tipos" IsSelected="True"/>
+                        <ComboBoxItem Content="Token de API" Tag="ApiToken"/>
+                        <ComboBoxItem Content="Chave SSH" Tag="SshKey"/>
+                        <ComboBoxItem Content="Chave de recuperação" Tag="RecoveryKey"/>
+                        <ComboBoxItem Content="Outro segredo" Tag="Other"/>
+                    </ComboBox>
+                </Grid>
                 <Border Grid.Row="4" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,0,0,1" Padding="18,12">
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="20"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="1" Text="CONTA" Style="{StaticResource Eyebrow}"/>
+                        <TextBlock Grid.Column="1" x:Name="NameHeader" Text="CONTA" Style="{StaticResource Eyebrow}"/>
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="{DynamicResource AccountMetadataVisibility}">
-                            <TextBlock Text="SITE" Width="170" Style="{StaticResource Eyebrow}"/>
+                            <TextBlock x:Name="SiteHeader" Text="SITE" Width="170" Style="{StaticResource Eyebrow}"/>
                             <TextBlock Text="PASTA" Width="120" Style="{StaticResource Eyebrow}"/>
-                            <TextBlock Text="ATUALIZADA EM" Width="90" Style="{StaticResource Eyebrow}"/>
+                            <TextBlock x:Name="UpdatedHeader" Text="ATUALIZADA EM" Width="140" Style="{StaticResource Eyebrow}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -96,14 +129,17 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                        <ui:SymbolIcon Grid.Column="1" Symbol="Star24" FontSize="12" Foreground="{DynamicResource BrandBrush}" Margin="8,0,0,0" Visibility="{Binding FavoriteVisibility}"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <ui:SymbolIcon Symbol="Warning24" FontSize="13" Foreground="{DynamicResource MainDangerBrush}" Margin="8,0,0,0" Visibility="{Binding AlertVisibility}" ToolTip="{Binding UpdatedLabel}"/>
+                                            <ui:SymbolIcon Symbol="Star24" FontSize="12" Foreground="{DynamicResource BrandBrush}" Margin="8,0,0,0" Visibility="{Binding FavoriteVisibility}"/>
+                                        </StackPanel>
                                     </Grid>
                                     <TextBlock Text="{Binding Username}" FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis" Margin="0,5,0,0" Visibility="{Binding UsernameVisibility}"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Visibility="{DynamicResource AccountMetadataVisibility}">
                                     <TextBlock Text="{Binding SiteLabel}" Width="170" Padding="0,0,14,0" FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis"/>
                                     <TextBlock Text="{Binding FolderLabel}" Width="120" Padding="0,0,14,0" FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding UpdatedLabel}" Width="90" FontSize="12" Foreground="{DynamicResource MainMutedBrush}"/>
+                                    <TextBlock Text="{Binding UpdatedLabel}" Width="140" Style="{StaticResource MetaCell}" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                                 <ui:SymbolIcon Grid.Column="3" Symbol="ChevronRight24" FontSize="14" Foreground="{DynamicResource MainMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                             </Grid>
@@ -111,14 +147,14 @@
                     </ListBox>
                     <StackPanel x:Name="Empty" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" Margin="12">
                         <ui:SymbolIcon Symbol="Key24" FontSize="30" Foreground="{DynamicResource MainMutedBrush}" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Nenhuma conta por aqui" FontSize="17" FontWeight="SemiBold" TextAlignment="Center" Margin="0,16,0,8"/>
-                        <TextBlock Text="Adicione uma conta ou ajuste a busca." FontSize="12" TextAlignment="Center" Foreground="{DynamicResource MainMutedBrush}" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="EmptyTitle" Text="Nenhuma conta por aqui" FontSize="17" FontWeight="SemiBold" TextAlignment="Center" Margin="0,16,0,8"/>
+                        <TextBlock x:Name="EmptyHint" Text="Adicione uma conta ou ajuste a busca." FontSize="12" TextAlignment="Center" Foreground="{DynamicResource MainMutedBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Grid>
                 <Border Grid.Row="6" x:Name="CollectionTip" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,1,0,0" Margin="0,20,0,0" Padding="0,16,0,0">
                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                         <ui:SymbolIcon Symbol="Cursor24" FontSize="16" Foreground="{DynamicResource BrandBrush}" Margin="0,0,10,0" VerticalAlignment="Top"/>
-                        <TextBlock Grid.Column="1" Text="Selecione uma conta para ver os detalhes. Suas senhas ficam ocultas até você pedir para exibi-las." FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextWrapping="Wrap"/>
+                        <TextBlock Grid.Column="1" x:Name="TipText" Text="Selecione uma conta para ver os detalhes. Suas senhas ficam ocultas até você pedir para exibi-las." FontSize="12" Foreground="{DynamicResource MainMutedBrush}" TextWrapping="Wrap"/>
                     </Grid>
                 </Border>
             </Grid>
@@ -150,23 +186,27 @@
                                     <Grid Margin="0,24,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                         <StackPanel Margin="0,0,12,0">
-                                            <TextBlock Text="USUÁRIO / E-MAIL" Style="{StaticResource Eyebrow}" Margin="0,0,0,9"/>
+                                            <TextBlock x:Name="UserLabel" Text="USUÁRIO / E-MAIL" Style="{StaticResource Eyebrow}" Margin="0,0,0,9"/>
                                             <TextBlock x:Name="SummaryUser" Style="{StaticResource DetailValue}"/>
                                         </StackPanel>
                                         <Button Grid.Column="1" x:Name="CopyUserButton" Style="{StaticResource IconAction}" Click="OnCopyUser" VerticalAlignment="Bottom"
                                                 ToolTip="Copiar usuário" AutomationProperties.Name="Copiar usuário"><ui:SymbolIcon Symbol="Copy24" FontSize="17"/></Button>
                                     </Grid>
-                                    <TextBlock Text="SENHA" Style="{StaticResource DetailLabel}" Margin="0,24,0,9"/>
+                                    <TextBlock x:Name="SecretLabel" Text="SENHA" Style="{StaticResource DetailLabel}" Margin="0,24,0,9"/>
                                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                        <TextBlock x:Name="SummaryPassword" Text="••••••••••••" FontFamily="Consolas" FontSize="21" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="SummaryPassword" Text="••••••••••••" FontFamily="Consolas" FontSize="21" VerticalAlignment="Center" TextWrapping="Wrap" MaxHeight="360"/>
                                         <Button Grid.Column="1" x:Name="RevealButton" Style="{StaticResource IconAction}" Click="OnReveal" ToolTip="Exibir senha" AutomationProperties.Name="Exibir ou ocultar senha">
                                             <ui:SymbolIcon x:Name="RevealIcon" Symbol="Eye24" FontSize="18"/>
                                         </Button>
                                     </Grid>
                                     <TextBlock x:Name="SummaryStrength" Foreground="{DynamicResource MainMutedBrush}" FontSize="12" Margin="0,6,0,0"/>
                                     <Button x:Name="CopyPasswordButton" Style="{StaticResource PrimaryButton}" Click="OnCopyPassword" HorizontalAlignment="Left" Margin="0,18,0,0">
-                                        <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Copy24" FontSize="16" Margin="0,0,8,0"/><TextBlock Text="Copiar senha"/></StackPanel>
+                                        <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Copy24" FontSize="16" Margin="0,0,8,0"/><TextBlock x:Name="CopySecretText" Text="Copiar senha"/></StackPanel>
                                     </Button>
+                                    <StackPanel x:Name="ExpiryPanel" Visibility="Collapsed">
+                                        <TextBlock Text="VALIDADE" Style="{StaticResource DetailLabel}" Margin="0,26,0,9"/>
+                                        <TextBlock x:Name="SummaryExpiry" Style="{StaticResource DetailValue}"/>
+                                    </StackPanel>
                                     <Border x:Name="TotpCard" BorderBrush="{DynamicResource MainLineBrush}" BorderThickness="0,1,0,0" Padding="0,22,0,0" Margin="0,26,0,0" Visibility="Collapsed">
                                         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <StackPanel>
@@ -182,7 +222,7 @@
                                     <Grid Margin="0,22,0,0">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                         <StackPanel Margin="0,0,12,0">
-                                            <TextBlock Text="SITE" Style="{StaticResource Eyebrow}" Margin="0,0,0,9"/>
+                                            <TextBlock x:Name="SiteLabel" Text="SITE" Style="{StaticResource Eyebrow}" Margin="0,0,0,9"/>
                                             <TextBlock x:Name="SummarySite" Style="{StaticResource DetailValue}"/>
                                         </StackPanel>
                                         <Button Grid.Column="1" x:Name="OpenSiteButton" Style="{StaticResource IconAction}" Click="OnOpenSite" VerticalAlignment="Bottom"
@@ -197,20 +237,40 @@
                                 <StackPanel x:Name="Editor" Visibility="Collapsed">
                                     <TextBlock Text="EDITAR INFORMAÇÕES" Style="{StaticResource Eyebrow}"/>
                                     <TextBlock x:Name="EditorHeading" Text="Editar conta" FontSize="25" FontWeight="SemiBold" Margin="0,8,0,12"/>
-                                    <TextBlock Text="Nome da conta" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="TitleInput" MaxLength="200" PlaceholderText="Ex.: E-mail pessoal"/>
-                                    <TextBlock Text="Usuário / e-mail" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="UserInput" MaxLength="1000"/>
-                                    <TextBlock Text="Senha" Style="{StaticResource FieldLabel}"/>
-                                    <ui:PasswordBox x:Name="PasswordInput" MinHeight="36" PasswordChanged="OnPasswordChanged"/>
-                                    <TextBlock x:Name="StrengthText" Style="{StaticResource MutedText}" Margin="0,6,0,10"/>
-                                    <Button Content="Gerar senha" Style="{StaticResource GhostButton}" Click="OnGenerate" HorizontalAlignment="Left"/>
-                                    <TextBlock Text="Endereço do site" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="UrlInput" MaxLength="2048" PlaceholderText="https://exemplo.com"/>
+                                    <TextBlock Text="Tipo" Style="{StaticResource FieldLabel}"/>
+                                    <ComboBox x:Name="KindInput" MinHeight="36" HorizontalAlignment="Stretch" SelectionChanged="OnKindChanged" AutomationProperties.Name="Tipo de item">
+                                        <ComboBoxItem Content="Senha de acesso"/>
+                                        <ComboBoxItem Content="Token de API"/>
+                                        <ComboBoxItem Content="Chave SSH"/>
+                                        <ComboBoxItem Content="Chave de recuperação"/>
+                                        <ComboBoxItem Content="Outro segredo"/>
+                                    </ComboBox>
+                                    <TextBlock x:Name="TitleFieldLabel" Text="Nome da conta" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="TitleInput" MaxLength="200" PlaceholderText="Ex.: E-mail pessoal"/>
+                                    <TextBlock x:Name="UserFieldLabel" Text="Usuário / e-mail" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="UserInput" MaxLength="1000"/>
+                                    <StackPanel x:Name="LoginFields">
+                                        <TextBlock Text="Senha" Style="{StaticResource FieldLabel}"/>
+                                        <ui:PasswordBox x:Name="PasswordInput" MinHeight="36" PasswordChanged="OnPasswordChanged"/>
+                                        <TextBlock x:Name="StrengthText" Style="{StaticResource MutedText}" Margin="0,6,0,10"/>
+                                        <Button Content="Gerar senha" Style="{StaticResource GhostButton}" Click="OnGenerate" HorizontalAlignment="Left"/>
+                                    </StackPanel>
+                                    <StackPanel x:Name="SecretFields" Visibility="Collapsed">
+                                        <TextBlock x:Name="SecretFieldLabel" Text="Token" Style="{StaticResource FieldLabel}"/>
+                                        <ui:TextBox x:Name="SecretInput" MaxLength="16384" AcceptsReturn="True" TextWrapping="Wrap" Height="110" FontFamily="Consolas" VerticalScrollBarVisibility="Auto"/>
+                                        <TextBlock x:Name="SecretHint" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                        <TextBlock Text="Validade (opcional)" Style="{StaticResource FieldLabel}"/>
+                                        <DatePicker x:Name="ExpiryInput" MinHeight="36" SelectedDateChanged="OnExpiryChanged" AutomationProperties.Name="Data de validade"/>
+                                        <TextBlock Text="Você será avisado quando faltarem 30 dias ou menos." Style="{StaticResource MutedText}" Margin="0,6,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="UrlFieldLabel" Text="Endereço do site" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="UrlInput" MaxLength="2048" PlaceholderText="https://exemplo.com"/>
                                     <TextBlock Text="Pasta" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="FolderInput" MaxLength="100"/>
                                     <TextBlock Text="Tags (separadas por vírgulas)" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="TagsInput" MaxLength="500"/>
                                     <CheckBox x:Name="FavoriteInput" Content="Favorito" Margin="0,18,0,0"/>
                                     <TextBlock Text="Notas" Style="{StaticResource FieldLabel}"/><ui:TextBox x:Name="NotesInput" AcceptsReturn="True" TextWrapping="Wrap" Height="85" VerticalScrollBarVisibility="Auto"/>
-                                    <TextBlock Text="CÓDIGO DE VERIFICAÇÃO — 2FA" Style="{StaticResource Eyebrow}" Margin="0,24,0,10"/>
-                                    <TextBlock Text="Chave Base32 ou endereço otpauth://totp do serviço. A chave será criptografada no cofre." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MainMutedBrush}" Margin="0,0,0,10"/>
-                                    <ui:PasswordBox x:Name="TotpInput" MinHeight="36" MaxLength="4096" PasswordChanged="OnTotpChanged"/>
+                                    <StackPanel x:Name="TotpFields">
+                                        <TextBlock Text="CÓDIGO DE VERIFICAÇÃO — 2FA" Style="{StaticResource Eyebrow}" Margin="0,24,0,10"/>
+                                        <TextBlock Text="Chave Base32 ou endereço otpauth://totp do serviço. A chave será criptografada no cofre." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource MainMutedBrush}" Margin="0,0,0,10"/>
+                                        <ui:PasswordBox x:Name="TotpInput" MinHeight="36" MaxLength="4096" PasswordChanged="OnTotpChanged"/>
+                                    </StackPanel>
                                     <TextBlock x:Name="FindingText" Foreground="{DynamicResource MainDangerBrush}" TextWrapping="Wrap" FontSize="12" Margin="0,16,0,0"/>
                                 </StackPanel>
                             </Grid>

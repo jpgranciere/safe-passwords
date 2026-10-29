@@ -19,7 +19,7 @@ internal partial class VaultView : UserControl, IPopupView
     {
         _popup = popup;
         InitializeComponent();
-        _all = App.Services.Vault.Entries;
+        _all = App.Services.Vault.Entries.Where(e => e.Kind == EntryKind.Login).ToArray();
         Rebuild();
     }
 
@@ -163,6 +163,9 @@ internal partial class VaultView : UserControl, IPopupView
 
     private void OnNew(object sender, RoutedEventArgs e) =>
         _popup.Navigate(new EntryEditorView(_popup, new VaultEntry(), isNew: true));
+
+    private void OnNewSecret(object sender, RoutedEventArgs e) =>
+        _popup.Navigate(new EntryEditorView(_popup, new VaultEntry { Kind = EntryKind.ApiToken }, isNew: true));
 
     private void OnGenerator(object sender, RoutedEventArgs e) =>
         _popup.Navigate(new GeneratorView(_popup, onUse: null, onBack: () => _popup.Navigate(new VaultView(_popup))));

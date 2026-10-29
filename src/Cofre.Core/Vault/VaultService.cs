@@ -121,6 +121,10 @@ public sealed class VaultService : IDisposable
         {
             RequireUnlocked();
             var copy = entry.Clone();
+            if (!Enum.IsDefined(copy.Kind)) throw new ArgumentException("Tipo de entrada inválido.");
+            // Each kind owns its own fields; the others are dropped so a secret never lingers in a password slot.
+            if (copy.Kind.IsSecret()) { copy.Password = ""; copy.Totp = ""; }
+            else { copy.Secret = ""; copy.Expires = null; }
             if (!string.IsNullOrWhiteSpace(copy.Totp)) Totp.Parse(copy.Totp);
             copy.UpdatedUtc = DateTime.UtcNow;
 

@@ -24,7 +24,24 @@ internal partial class EntryEditorView : UserControl, IPopupView
         _isNew = isNew;
         InitializeComponent();
 
-        TitleText.Text = isNew ? "Nova senha" : "Editar senha";
+        var secret = entry.Kind.IsSecret();
+        TitleText.Text = secret ? (isNew ? "Novo token" : "Editar segredo") : isNew ? "Nova senha" : "Editar senha";
+        if (secret)
+        {
+            KindPanel.Visibility = Visibility.Visible;
+            LoginPanel.Visibility = Visibility.Collapsed;
+            SecretPanel.Visibility = Visibility.Visible;
+            KindInput.SelectedIndex = (int)entry.Kind - 1;
+            SecretInput.Text = entry.Secret;
+            ExpiryInput.SelectedDate = entry.Expires?.ToDateTime(TimeOnly.MinValue);
+            UserLabel.Text = "Conta ou identificação (opcional)";
+            UrlLabel.Text = "Serviço ou endereço (opcional)";
+            TitleInput.PlaceholderText = "Ex.: GitHub, servidor de produção";
+            UsernameInput.PlaceholderText = "Ex.: ci-bot, deploy@servidor";
+            UrlInput.PlaceholderText = "https://exemplo.com";
+            UpdateSecretLabel();
+        }
+
         TitleInput.Text = entry.Title;
         UsernameInput.Text = entry.Username;
         PasswordInput.Password = entry.Password;
@@ -32,7 +49,7 @@ internal partial class EntryEditorView : UserControl, IPopupView
         NotesInput.Text = entry.Notes;
         SetFavorite(entry.Favorite);
         DeleteButton.Visibility = isNew ? Visibility.Collapsed : Visibility.Visible;
-        Strength.Update(entry.Password);
+        if (!secret) Strength.Update(entry.Password);
 
         _deleteArmTimer.Tick += (_, _) => DisarmDelete();
         PreviewKeyDown += OnPreviewKeyDown;
@@ -60,9 +77,16 @@ internal partial class EntryEditorView : UserControl, IPopupView
     private void OnAnyChanged(object sender, RoutedEventArgs e)
     {
         if (TitleError is not null) TitleError.Visibility = Visibility.Collapsed;
+        if (SecretError is not null) SecretError.Visibility = Visibility.Collapsed;
     }
 
     private void OnPasswordChanged(object sender, RoutedEventArgs e) => Strength?.Update(PasswordInput.Password);
+
+    private EntryKind SecretKind => KindInput.SelectedIndex >= 0 ? (EntryKind)(KindInput.SelectedIndex + 1) : EntryKind.ApiToken;
+
+    private void OnKindChanged(object sender, SelectionChangedEventArgs e) { if (SecretLabel is not null) UpdateSecretLabel(); }
+
+    private void UpdateSecretLabel() => SecretLabel.Text = SecretKind.ValueLabel();
 
     private void OnQuickGenerate(object sender, RoutedEventArgs e)
     {
@@ -89,7 +113,13 @@ internal partial class EntryEditorView : UserControl, IPopupView
         var copy = _entry.Clone();
         copy.Title = TitleInput.Text.Trim();
         copy.Username = UsernameInput.Text.Trim();
-        copy.Password = PasswordInput.Password;
+        if (_entry.Kind.IsSecret())
+        {
+            copy.Kind = SecretKind;
+            copy.Secret = EntryKinds.NormalizeSecret(SecretInput.Text);
+            copy.Expires = ExpiryInput.SelectedDate is { } due ? DateOnly.FromDateTime(due) : null;
+        }
+        else copy.Password = PasswordInput.Password;
         copy.Url = UrlInput.Text.Trim();
         copy.Notes = NotesInput.Text;
         copy.Favorite = _favorite;
@@ -117,6 +147,13 @@ internal partial class EntryEditorView : UserControl, IPopupView
             return;
         }
 
+        if (edited.Kind.IsSecret() && edited.Secret.Length == 0)
+        {
+            SecretError.Visibility = Visibility.Visible;
+            SecretInput.Focus();
+            return;
+        }
+
         try
         {
             App.Services.Vault.Upsert(edited);
@@ -127,7 +164,7 @@ internal partial class EntryEditorView : UserControl, IPopupView
             return;
         }
 
-        _popup.ShowToast("Salvo no cofre");
+        _popup.ShowToast(edited.Kind.IsSecret() ? "Salvo em Tokens e chaves" : "Salvo no cofre");
         _popup.Navigate(new VaultView(_popup));
     }
 

@@ -28,7 +28,7 @@ public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool
         if (action == "list")
         {
             // Bound even the escaped JSON response to the native framing limit. No secrets in list results.
-            var matches = vault.Entries.Where(e => SiteOrigin.Matches(e.Url, origin)).Take(20)
+            var matches = vault.Entries.Where(e => e.Kind == EntryKind.Login && SiteOrigin.Matches(e.Url, origin)).Take(20)
                 .Select(e => new { id = e.Id, title = new string(e.Title.Take(200).ToArray()), username = new string(e.Username.Take(200).ToArray()) }).ToArray();
             return new { ok = true, entries = matches };
         }
@@ -40,7 +40,7 @@ public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool
         if (action is "fill" or "update")
         {
             if (!Guid.TryParse(Read(request, "id", 50), out var id)) return Error("Entrada inválida.");
-            selected = vault.Entries.FirstOrDefault(e => e.Id == id && SiteOrigin.Matches(e.Url, origin));
+            selected = vault.Entries.FirstOrDefault(e => e.Id == id && e.Kind == EntryKind.Login && SiteOrigin.Matches(e.Url, origin));
             if (selected is null) return Error("Entrada não corresponde à origem desta página.");
             title = selected.Title;
             if (action == "fill") username = selected.Username;
@@ -56,7 +56,7 @@ public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool
         // The approval UI can pump lock/edit messages. Check fresh state before releasing any credentials.
         if (action == "fill")
         {
-            var current = vault.Entries.FirstOrDefault(e => e.Id == selected!.Id && SiteOrigin.Matches(e.Url, origin));
+            var current = vault.Entries.FirstOrDefault(e => e.Id == selected!.Id && e.Kind == EntryKind.Login && SiteOrigin.Matches(e.Url, origin));
             if (current is null || current.Username != selected!.Username || current.Password != selected.Password)
                 return Error("A entrada mudou. Solicite o preenchimento novamente.");
             return new { ok = true, username = current.Username, password = current.Password, origin };
@@ -65,7 +65,7 @@ public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool
         {
             if (action == "update")
             {
-                var current = vault.Entries.FirstOrDefault(e => e.Id == selected!.Id && SiteOrigin.Matches(e.Url, origin));
+                var current = vault.Entries.FirstOrDefault(e => e.Id == selected!.Id && e.Kind == EntryKind.Login && SiteOrigin.Matches(e.Url, origin));
                 if (current is null || current.UpdatedUtc != selected!.UpdatedUtc || current.Password != selected.Password
                     || current.Username != selected.Username || current.Url != selected.Url)
                     return Error("A entrada mudou. Solicite a atualização novamente.");

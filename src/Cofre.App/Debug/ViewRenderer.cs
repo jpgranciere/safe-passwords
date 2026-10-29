@@ -29,6 +29,11 @@ internal static class ViewRenderer
             vault.Upsert(new VaultEntry { Title = "E-mail pessoal", Username = "demo@example.com", Password = "senha123", Url = "https://example.com", Folder = "Pessoal", Tags = "email", Totp = "JBSWY3DPEHPK3PXP" });
             vault.Upsert(new VaultEntry { Title = "Conta de demonstração", Username = "demo", Password = "senha123", Folder = "Trabalho" });
             vault.Upsert(new VaultEntry { Title = "Serviço seguro", Username = "demo", Password = "T4!pG8#qV2$kR9&zW6", Folder = "Trabalho", Favorite = true });
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            vault.Upsert(new VaultEntry { Kind = EntryKind.ApiToken, Title = "GitHub (deploy)", Username = "ci-bot", Url = "https://github.com", Secret = "ghp_demoOnlyToken0123456789", Folder = "Trabalho", Expires = today.AddDays(5) });
+            vault.Upsert(new VaultEntry { Kind = EntryKind.ApiToken, Title = "Stripe (teste)", Secret = "sk_test_demoOnly", Folder = "Trabalho", Expires = today.AddDays(-3) });
+            vault.Upsert(new VaultEntry { Kind = EntryKind.SshKey, Title = "Servidor de produção", Username = "deploy@10.0.0.5", Secret = "-----BEGIN OPENSSH PRIVATE KEY-----\nZGVtbyBvbmx5\n-----END OPENSSH PRIVATE KEY-----\n" });
+            vault.Upsert(new VaultEntry { Kind = EntryKind.RecoveryKey, Title = "Conta Google", Secret = "abcd-efgh-ijkl-mnop", Expires = today.AddDays(120) });
         }
 
         popup.ShowActivated = false;
@@ -50,13 +55,14 @@ internal static class ViewRenderer
             Save(popup, new VaultView(popup), outputDir, $"{tag}-3-list", theme, 584);
             Save(popup, new EntryEditorView(popup, entries[0].Clone(), isNew: false), outputDir, $"{tag}-4-edit", theme, 584);
             Save(popup, new EntryEditorView(popup, new VaultEntry(), isNew: true), outputDir, $"{tag}-5-new", theme, 584);
+            Save(popup, new EntryEditorView(popup, new VaultEntry { Kind = EntryKind.ApiToken }, isNew: true), outputDir, $"{tag}-5b-new-token", theme, 584);
             Save(popup, new GeneratorView(popup, onUse: _ => { }, onBack: () => { }), outputDir, $"{tag}-6-generator", theme, 584);
             Save(popup, new SettingsView(popup), outputDir, $"{tag}-7-settings", theme, 860);
             Save(popup, new ChangePasswordView(popup), outputDir, $"{tag}-8-change-password", theme, 584);
             var main = new Views.MainWindow { ShowActivated = false, Left = -20000, Top = 0, WindowStartupLocation = WindowStartupLocation.Manual };
             main.Show();
             if (createdDemo) CheckMainInteraction(main, masterPassword, outputDir, tag);
-            foreach (var section in new[] { "all", "security", "totp" })
+            foreach (var section in new[] { "all", "security", "totp", "secrets", "expiring" })
             {
                 main.SelectSection(section);
                 main.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
@@ -70,6 +76,14 @@ internal static class ViewRenderer
                     SaveMain(main, outputDir, $"{tag}-main-{section}-open");
                 }
             }
+            main.SelectSection("secrets");
+            var secrets = (ListBox)main.FindName("Entries");
+            secrets.SelectedItem = secrets.Items[1];
+            ((Button)main.FindName("EditButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            main.UpdateLayout();
+            SaveMain(main, outputDir, $"{tag}-main-secret-editor");
+            ((Button)main.FindName("CancelButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            ((Button)main.FindName("CloseDetailsButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             main.SelectSection("all");
             var accounts = (ListBox)main.FindName("Entries");
             accounts.SelectedItem = accounts.Items[0];
@@ -202,6 +216,59 @@ internal static class ViewRenderer
             Check(!accepted && !Application.Current.Windows.OfType<AppDialogWindow>().Any(), "Expiring a browser request closes its dialog without consent");
         }
 
+        // Tokens and keys: separate section, own editor fields, value hidden until revealed.
+        main.SelectSection("secrets"); Pump();
+        Check(list.Items.Count == 4 && Part("KindFilter").Visibility == Visibility.Visible && Part("LoginFields").Visibility == Visibility.Visible,
+            "Tokens and keys section lists only secrets and shows the kind filter");
+        main.SelectSection("expiring"); Pump();
+        Check(list.Items.Count == 3 && ((System.Collections.IList)list.Items).Cast<object>().First().ToString() is not null
+            && Part("ExpiryBadge").Visibility == Visibility.Visible && ((TextBlock)main.FindName("ExpiryBadge")).Text == "2",
+            "Expiry section lists dated secrets and badges the ones that are due or past");
+        main.SelectSection("secrets"); Pump();
+        Click("NewButton");
+        Check(Part("SecretFields").Visibility == Visibility.Visible && Part("LoginFields").Visibility == Visibility.Collapsed
+            && Part("TotpFields").Visibility == Visibility.Collapsed, "New secret opens the token editor, not the password one");
+        ((Wpf.Ui.Controls.TextBox)main.FindName("TitleInput")).Text = "Token de QA";
+        Click("SaveButton"); Pump();
+        Check(vault.Entries.All(x => x.Title != "Token de QA"), "A secret without a value is not saved");
+        ((Wpf.Ui.Controls.TextBox)main.FindName("SecretInput")).Text = "qa-secret-value";
+        ((DatePicker)main.FindName("ExpiryInput")).SelectedDate = DateTime.Today.AddDays(10);
+        Click("SaveButton"); Pump();
+        var qa = vault.Entries.Single(x => x.Title == "Token de QA");
+        Check(qa.Kind == EntryKind.ApiToken && qa.Secret == "qa-secret-value" && qa.Password == "" && qa.Expires == DateOnly.FromDateTime(DateTime.Today.AddDays(10)),
+            "Saving a token stores the value and expiry in the secret fields only");
+        Check(((TextBlock)main.FindName("SummaryPassword")).Text != "qa-secret-value", "The token value stays masked until revealed");
+        Click("RevealButton");
+        Check(((TextBlock)main.FindName("SummaryPassword")).Text == "qa-secret-value", "Reveal shows the token value");
+        Click("EditButton");
+        ((ComboBox)main.FindName("KindInput")).SelectedIndex = 0;
+        Check(((Wpf.Ui.Controls.PasswordBox)main.FindName("PasswordInput")).Password == "qa-secret-value" && Part("LoginFields").Visibility == Visibility.Visible,
+            "Switching a token to a password carries the value over");
+        RespondToDialog("ConfirmAction");
+        Click("CancelButton"); Pump();
+        vault.Delete(qa.Id); Pump();
+        main.SelectSection("all"); Pump();
+
+        // Tokens saved as passwords before kinds existed: detected, reviewed in a dialog, then moved.
+        var legacy = vault.Upsert(new VaultEntry { Title = "Conta de CI", Password = "ghp_abcdefghijklmnopqrstuvwxyz0123456789", Username = "ci" });
+        var guess = vault.Upsert(new VaultEntry { Title = "Token do banco", Password = "123456" });
+        main.SelectSection("secrets"); Pump();
+        Check(Part("MoveButton").Visibility == Visibility.Visible && ((Button)main.FindName("MoveButton")).Content.ToString() == "Mover de Senhas (2)",
+            "The tokens section offers to move logins that look like tokens");
+        RespondToDialog("ConfirmAction", tag + "-dialog-move", () =>
+        {
+            var boxes = Application.Current.Windows.OfType<AppDialogWindow>().Single().FindName("ExtraHost");
+            var checks = FindChecks((DependencyObject)((ContentControl)boxes!).Content).ToArray();
+            if (checks.Length != 2 || checks.Count(c => c.IsChecked == true) != 1) throw new InvalidOperationException("Only the sure match should start checked");
+        });
+        Click("MoveButton"); Pump();
+        var movedEntry = vault.Entries.Single(x => x.Id == legacy.Id);
+        Check(movedEntry.Kind == EntryKind.ApiToken && movedEntry.Secret.StartsWith("ghp_") && movedEntry.Password == "" && movedEntry.Username == "ci",
+            "Confirming moves the sure match into Tokens and keeps its other fields");
+        Check(vault.Entries.Single(x => x.Id == guess.Id).Kind == EntryKind.Login && File.Exists(vault.Path + ".antes-de-mover-tokens"),
+            "A name-only guess stays a password unless checked, and a copy of the vault is kept");
+        vault.Delete(legacy.Id); vault.Delete(guess.Id); main.SelectSection("all"); Pump();
+
         // Only executed for a newly generated demo vault, never for an existing/user vault.
         var count = vault.Entries.Count;
         Click("NewButton");
@@ -233,6 +300,13 @@ internal static class ViewRenderer
         main.Show(); Pump();
         Check(Part("DetailsPane").Visibility == Visibility.Collapsed && list.SelectedItem is null, "Reopening the main window starts with the account list");
         File.WriteAllLines(Path.Combine(dir, tag + "-ui-checks.txt"), checks);
+    }
+
+    private static IEnumerable<CheckBox> FindChecks(DependencyObject node)
+    {
+        if (node is CheckBox box) yield return box;
+        foreach (var child in LogicalTreeHelper.GetChildren(node).OfType<DependencyObject>())
+            foreach (var found in FindChecks(child)) yield return found;
     }
 
     private static void SaveMain(Window main, string dir, string name)

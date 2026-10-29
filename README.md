@@ -46,6 +46,22 @@ Ctrl+Alt+P continuam abrindo o painel rápido. Fechar a janela mantém o aplicat
   `otpauth://totp/...` fornecida pelo serviço e salve. O código atual e o tempo restante aparecem no topo dos detalhes.
   Aceita SHA1, SHA256 e SHA512, 6 ou 8 dígitos e períodos entre 15 e 120 segundos. Mantenha o relógio do Windows correto.
 - As chaves TOTP são criptografadas junto com o cofre. Esta versão recebe texto; não lê imagens QR.
+- **Tokens e chaves** (seção própria na barra lateral, separada das senhas) guarda tokens de API, chaves SSH, chaves
+  de recuperação e outros segredos. No editor, escolha o **Tipo**; cada tipo tem só os campos que fazem sentido
+  (valor, conta ou identificação, serviço, validade). O valor fica oculto nos detalhes até você pedir para exibi-lo, e
+  a cópia segue a mesma limpeza automática da área de transferência. Para chaves SSH, cole a chave privada completa.
+  O valor é visível enquanto você edita o campo.
+- **Validade e avisos:** informe a data em que o segredo expira. Faltando 30 dias ou menos (ou depois de vencido) a
+  data aparece em vermelho na lista e nos detalhes, e **Vencimentos** na barra lateral mostra quantos pedem atenção.
+  **Segurança** também conta esses itens. O aviso vale enquanto o aplicativo está aberto; não há notificação em segundo plano.
+- **Mover de Senhas:** se você já guardou tokens como senha, a seção Tokens e chaves mostra **Mover de Senhas (N)**.
+  O Cofre procura valores com formato de token (como `ghp_`, `sk-`, `xoxb-`, chaves privadas) e nomes como "token" ou
+  "SSH", e abre uma lista para você revisar. Só o que tem formato claro vem marcado; o que foi sugerido só pelo nome
+  vem desmarcado. Nada muda sem confirmação, e uma cópia do cofre fica em `cofre.dat.antes-de-mover-tokens`
+  (mesma pasta do cofre) antes de mover. Itens com chave TOTP nunca são sugeridos.
+- Tokens e chaves **não** aparecem no painel rápido, no auto-digitar nem na extensão do navegador, e não entram na
+  análise de senhas fracas ou repetidas. Cofres criados antes deste recurso continuam funcionando: tudo que já estava
+  salvo permanece como senha.
 - Ao bloquear, a lista, os campos em edição e os códigos são limpos. Alterações não salvas são descartadas no bloqueio.
 
 ### Extensão para Chrome e Edge

@@ -94,8 +94,12 @@
         </Grid>
 
         <Grid Grid.Row="2">
-            <ui:Button Content="Nova senha" Appearance="Primary" Icon="{ui:SymbolIcon Add24}"
-                       HorizontalAlignment="Left" Click="OnNew" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <ui:Button Content="Senha" Appearance="Primary" Icon="{ui:SymbolIcon Add24}"
+                           ToolTip="Adicionar senha" AutomationProperties.Name="Adicionar senha" Click="OnNew" />
+                <ui:Button Content="Token" Appearance="Secondary" Icon="{ui:SymbolIcon Add24}" Margin="6,0,0,0"
+                           ToolTip="Adicionar token, chave SSH ou outro segredo" AutomationProperties.Name="Adicionar token" Click="OnNewSecret" />
+            </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Style="{StaticResource IconButton}" ToolTip="Janela principal" Click="OnMain">
                     <ui:SymbolIcon Symbol="Window24" FontSize="18" />

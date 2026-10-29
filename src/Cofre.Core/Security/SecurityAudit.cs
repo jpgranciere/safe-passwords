@@ -11,9 +11,10 @@ public sealed record SecurityFinding(Guid EntryId, string Title, bool Weak, bool
 
 public static class SecurityAudit
 {
+    /// <summary>Password health. Only logins are analysed; tokens and keys have no password to rate.</summary>
     public static IReadOnlyList<SecurityFinding> Analyze(IEnumerable<VaultEntry> source)
     {
-        var entries = source.ToArray();
+        var entries = source.Where(e => e.Kind == EntryKind.Login).ToArray();
         var reused = entries.Where(e => e.Password.Length > 0)
             .GroupBy(e => e.Password, StringComparer.Ordinal).Where(g => g.Count() > 1)
             .SelectMany(g => g.Select(e => e.Id)).ToHashSet();
