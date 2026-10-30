@@ -32,7 +32,7 @@ public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool
                 .Select(e => new { id = e.Id, title = new string(e.Title.Take(200).ToArray()), username = new string(e.Username.Take(200).ToArray()) }).ToArray();
             return new { ok = true, entries = matches };
         }
-        if (action is not ("fill" or "save" or "update")) return Error("Ação não suportada.");
+        if (action is not ("fill" or "save" or "update" or "save-token")) return Error("Ação não suportada.");
         VaultEntry? selected = null;
         var username = Read(request, "username", 1000);
         var password = Read(request, "password", 4096);
@@ -74,6 +74,7 @@ public sealed class BrowserAccess(VaultService vault, Func<BrowserApproval, bool
                 changed.Password = password;
                 vault.Upsert(changed); // Keep TOTP, notes, folder, tags, title and URL.
             }
+            else if (action == "save-token") vault.Upsert(new VaultEntry { Kind = EntryKind.ApiToken, Title = title.Trim(), Username = username, Secret = password, Url = origin });
             else vault.Upsert(new VaultEntry { Title = title.Trim(), Username = username, Password = password, Url = origin });
             return new { ok = true };
         }

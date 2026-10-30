@@ -77,6 +77,22 @@ public class BrowserAccessTests : IDisposable
     }
 
     [Fact]
+    public void SavingTokenRequiresApprovalAndNeverExposesItAsLogin()
+    {
+        var request = new { action = "save-token", url = "https://example.com/new", title = "API", username = "bot", password = "example-token" };
+        Assert.False(Call(new BrowserAccess(_vault, _ => false), request).GetProperty("ok").GetBoolean());
+        Assert.Single(_vault.Entries);
+        var access = new BrowserAccess(_vault, approval => { Assert.Equal("save-token", approval.Action); return true; });
+        Assert.True(Call(access, request).GetProperty("ok").GetBoolean());
+        var token = _vault.Entries.Single(e => e.Kind == EntryKind.ApiToken);
+        Assert.Equal("example-token", token.Secret);
+        Assert.Equal("", token.Password);
+        Assert.Equal("bot", token.Username);
+        Assert.Single(Call(access, new { action = "list", url = "https://example.com" }).GetProperty("entries").EnumerateArray());
+        Assert.False(Call(access, new { action = "fill", url = "https://example.com", id = token.Id }).GetProperty("ok").GetBoolean());
+    }
+
+    [Fact]
     public void ExpiredConsentCannotSave()
     {
         using var cancellation = new CancellationTokenSource();

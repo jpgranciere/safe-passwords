@@ -29,7 +29,7 @@ async function setup(t, body, { realShadow = false, csp = false } = {}) {
     }
     globalThis.__requests = []; globalThis.__saved = []; globalThis.__options = null;
     globalThis.__operation = (0, eval)("(" + code + ")");
-    globalThis.chrome = { runtime: { sendMessage: async message => {
+    globalThis.chrome = { runtime: { id: "test-extension", sendMessage: async message => {
       globalThis.__requests.push(message);
       const args = { field: message.field };
       try {
@@ -42,7 +42,7 @@ async function setup(t, body, { realShadow = false, csp = false } = {}) {
         }
         if (message.action === "inline.apply") return { ok: true, ...__operation(message.pageUrl, "generated", { ...args, password: message.password }) };
         if (message.action === "inline.fill") return { ok: true, ...__operation(message.pageUrl, "fill", { ...args, username: "demo@cofre.test", password: "test-only-secret" }) };
-        if (message.action === "inline.save") { __saved.push({ id: message.id, ...__operation(message.pageUrl, "read", args) }); return { ok: true }; }
+        if (message.action === "inline.save") { __saved.push({ id: message.id, kind: message.kind, ...__operation(message.pageUrl, "read", args) }); return { ok: true }; }
         return { ok: false, error: "Unknown" };
       } catch (error) { return { ok: false, error: error.message }; }
     } } };
@@ -56,13 +56,20 @@ async function part(page, selector) { return (await page.evaluateHandle(selector
 async function ready(page) { await page.waitForFunction(() => !__testRoot.querySelector(".panel").hidden && !__testRoot.querySelector("#save").disabled); }
 async function click(page, selector) { const el = await part(page, selector); await el.click(); await ready(page); }
 async function state(page, selector, property = "textContent") { return page.evaluate(({ selector, property }) => __testRoot.querySelector(selector)[property], { selector, property }); }
+async function openFor(page, selector) {
+  const index = await page.evaluate(selector => [...document.querySelectorAll('input[type="password"]')].indexOf(document.querySelector(selector)), selector);
+  await (await part(page, `.field:nth-of-type(${index + 1})`)).click();
+  await ready(page);
+}
 const login = '<h1>Entre na sua conta</h1><form><label>E-mail<input type="email" autocomplete="username"></label><label>Senha<input id="password" type="password" autocomplete="current-password"></label><button>Entrar</button></form>';
 const signup = '<h1>Crie sua conta</h1><form><label>E-mail<input type="email" value="novo@cofre.test"></label><label>Senha<input id="password" type="password" autocomplete="new-password" minlength="16" maxlength="32"></label><label>Confirme<input id="confirm" type="password"></label><button>Cadastrar</button></form>';
 
 test("real DOM: focus suggests logins, explicit selection fills and never submits", { skip: !enabled }, async t => {
   const page = await setup(t, login);
   await page.evaluate(() => { document.querySelector("form").addEventListener("submit", e => { e.preventDefault(); globalThis.__submitted = true; }); });
-  await page.locator("#password").click(); await ready(page);
+  await page.locator("#password").click();
+  assert.equal(await state(page, ".panel", "hidden"), true);
+  await openFor(page, "#password");
   assert.match(await state(page, ".hint"), /Login identificado/);
   assert.match(await state(page, "#entries"), /demo@cofre.test/);
   assert.equal(await page.locator("#password").inputValue(), "");
@@ -74,10 +81,18 @@ test("real DOM: focus suggests logins, explicit selection fills and never submit
 });
 test("real DOM: signup generator fills confirmation, remembers options and saves selected account", { skip: !enabled }, async t => {
   const page = await setup(t, signup);
-  await page.locator("#password").click(); await ready(page);
+  await openFor(page, "#password");
   assert.match(await state(page, ".hint"), /Cadastro identificado/);
   assert.equal(await state(page, "#generator", "hidden"), false);
   const initial = await state(page, ".preview", "value"); assert.equal(initial.length, 20);
+  assert.equal(await state(page, ".preview", "type"), "password");
+  await click(page, "#toggle-preview");
+  assert.equal(await state(page, ".preview", "type"), "text");
+  assert.equal(await state(page, "#toggle-preview", "title"), "Ocultar senha");
+  await click(page, "#toggle-preview");
+  assert.equal(await state(page, ".preview", "type"), "password");
+  await click(page, "#regenerate");
+  assert.equal((await state(page, ".preview", "value")).length, 20);
   await (await part(page, "details summary")).click();
   const length = await part(page, "#length"); await length.fill("28"); await length.press("Tab"); await ready(page);
   await page.waitForFunction(() => __testRoot.querySelector(".preview").value.length === 28);
@@ -88,13 +103,16 @@ test("real DOM: signup generator fills confirmation, remembers options and saves
   assert.equal(await page.locator("#confirm").inputValue(), generated);
   await (await part(page, "#save-target")).selectOption("account1");
   await click(page, "#save");
-  assert.deepEqual(await page.evaluate(() => __saved[0]), { id: "account1", username: "novo@cofre.test", password: generated });
+  assert.deepEqual(await page.evaluate(() => __saved[0]), { id: "account1", kind: "login", username: "novo@cofre.test", password: generated });
+  await (await part(page, "#save-target")).selectOption("new-token");
+  await click(page, "#save");
+  assert.deepEqual(await page.evaluate(() => __saved[1]), { id: "", kind: "token", username: "novo@cofre.test", password: generated });
   await mkdir("test-results", { recursive: true });
   await page.screenshot({ path: "test-results/signup.png" });
 });
 test("real DOM: password-change preserves current password", { skip: !enabled }, async t => {
   const page = await setup(t, '<h1>Alterar senha</h1><form><input type="password" id="old" autocomplete="current-password" value="old-secret"><input type="password" id="password" autocomplete="new-password"><input type="password" id="confirm" autocomplete="new-password"></form>');
-  await page.locator("#password").click(); await ready(page);
+  await openFor(page, "#password");
   assert.match(await state(page, ".hint"), /Troca de senha/);
   const generated = await state(page, ".preview", "value");
   await click(page, "#use");
@@ -104,7 +122,7 @@ test("real DOM: password-change preserves current password", { skip: !enabled },
 });
 test("real DOM: multiple forms target only the chosen form; dynamically inserted fields get icons", { skip: !enabled }, async t => {
   const page = await setup(t, login + '<form id="second"><input type="email" id="second-user"><input type="password" id="second-password"></form>');
-  await page.locator("#second-password").click(); await ready(page); await click(page, "#entries button");
+  await openFor(page, "#second-password"); await click(page, "#entries button");
   assert.equal(await page.locator("#second-password").inputValue(), "test-only-secret");
   assert.equal(await page.locator("#password").inputValue(), "");
   await page.evaluate(() => {
@@ -120,9 +138,10 @@ test("real DOM: multiple forms target only the chosen form; dynamically inserted
 });
 test("real DOM: cross-origin actions, altered fields and mismatched confirmations fail closed", { skip: !enabled }, async t => {
   const page = await setup(t, signup);
-  await page.locator("#password").click(); await ready(page);
+  await openFor(page, "#password");
   await page.locator("#password").fill("one"); await page.locator("#confirm").fill("two");
-  await page.locator("#password").click(); await ready(page);
+  await page.mouse.click(30, 30);
+  await openFor(page, "#password");
   await click(page, "#save"); assert.match(await state(page, ".status"), /precisam ser iguais/);
   assert.equal(await page.evaluate(() => __saved.length), 0);
   await page.evaluate(() => { document.querySelector("form").action = "https://evil.test"; });
@@ -130,12 +149,12 @@ test("real DOM: cross-origin actions, altered fields and mismatched confirmation
 });
 test("real DOM: panel clears suggested password on outside click and Escape", { skip: !enabled }, async t => {
   const page = await setup(t, signup);
-  await page.locator("#password").click(); await ready(page);
+  await openFor(page, "#password");
   assert.ok(await state(page, ".preview", "value"));
   await page.mouse.click(30, 30);
   assert.equal(await state(page, ".panel", "hidden"), true);
   assert.equal(await state(page, ".preview", "value"), "");
-  await page.locator("#password").click(); await ready(page);
+  await openFor(page, "#password");
   await page.keyboard.press("Escape"); assert.equal(await state(page, ".panel", "hidden"), true);
 });
 
@@ -147,4 +166,13 @@ test("real DOM: field icon leaves room for a wide show-password button", { skip:
     return { iconRight: field.right, eyeLeft: eye.left };
   });
   assert.ok(positions.iconRight <= positions.eyeLeft - 5);
+});
+
+test("real DOM: invalidated extension asks to reload the page", { skip: !enabled }, async t => {
+  const page = await setup(t, login);
+  await openFor(page, "#password");
+  await page.evaluate(() => { delete chrome.runtime; });
+  await click(page, "#generator-tab");
+  assert.match(await state(page, ".status"), /extensão foi atualizada.*Recarregue esta página/i);
+  assert.equal(await state(page, ".preview", "value"), "");
 });

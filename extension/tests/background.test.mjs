@@ -107,6 +107,13 @@ test("inline save reads fresh form values in isolated world and updates only sel
   assert.deepEqual(nativeRequests[0], { action: "update", url: "https://example.com", id: "account-id",
     title: "example.com", username: "demo", password: "form-secret" });
 });
+test("inline token save reads the form and cannot update a login", async () => {
+  reset();
+  assert.equal((await request({ action: "inline.save", pageUrl: page.url, field: "token", kind: "token" }, inline())).ok, true);
+  assert.deepEqual(nativeRequests[0], { action: "save-token", url: "https://example.com", id: "", title: "example.com", username: "demo", password: "form-secret" });
+  assert.equal((await request({ action: "inline.save", pageUrl: page.url, field: "token", kind: "token", id: "account-id" }, inline())).ok, false);
+  assert.equal(nativeRequests.length, 1);
+});
 test("generation stores only preferences and requires no native connection", async () => {
   reset();
   const response = await request({ action: "inline.generate", pageUrl: page.url, field: "token", options: { length: 24 } }, inline());

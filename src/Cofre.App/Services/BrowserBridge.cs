@@ -90,10 +90,12 @@ internal sealed class BrowserBridge : IDisposable
         ((App)Application.Current).OpenMainWindow();
         var owner = Application.Current.Windows.OfType<Views.MainWindow>().FirstOrDefault();
         var update = approval.Action == "update";
+        var token = approval.Action == "save-token";
         var context = $"Site: {approval.Origin}\nConta: {SafeLabel(approval.Title)}\nUsuário: {SafeLabel(approval.Username)}";
         var approved = owner is not null && Views.AppDialogWindow.Confirm(owner,
-            update ? "Atualizar esta conta?" : "Salvar esta conta?",
+            update ? "Atualizar esta conta?" : token ? "Salvar este token?" : "Salvar esta conta?",
             update ? "O usuário e a senha desta conta serão substituídos pelos dados do formulário. Confira o domínio e a conta."
+                : token ? "Confira os dados abaixo. O valor do formulário será salvo como token em Tokens e chaves."
                 : "Confira os dados abaixo. Uma nova conta será criada no seu cofre.",
             update ? "Atualizar conta" : "Salvar no cofre", context: context, cancellationToken: cancellationToken, bringToFront: true);
         if (approved) App.Services.IdleLock.Touch();

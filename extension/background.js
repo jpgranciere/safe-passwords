@@ -127,9 +127,11 @@ async function handle(message, sender, kind) {
     return { ok: true };
   }
   if (message.action === "inline.save") {
+    if (message.kind !== undefined && !["login", "token"].includes(message.kind)) throw new Error("Tipo de entrada inválido.");
     const values = await operate("read");
     const id = typeof message.id === "string" ? message.id : "";
-    return await native({ action: id ? "update" : "save", url: origin, id,
+    if (message.kind === "token" && id) throw new Error("Não é possível atualizar uma conta como token.");
+    return await native({ action: message.kind === "token" ? "save-token" : id ? "update" : "save", url: origin, id,
       title: new URL(url).hostname, username: values.username, password: values.password });
   }
   if (message.action === "save") return await native({ action: "save", url: origin, title: message.title,
