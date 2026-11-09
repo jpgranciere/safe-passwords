@@ -168,6 +168,29 @@ test("real DOM: field icon leaves room for a wide show-password button", { skip:
   assert.ok(positions.iconRight <= positions.eyeLeft - 5);
 });
 
+test("real DOM: field icon follows layout shifts after a transition", { skip: !enabled }, async t => {
+  const page = await setup(t, '<form><div id="spacer" style="height:0;transition:height 0.8s linear"></div><input id="password" type="password"></form>');
+  await page.evaluate(() => { document.querySelector("#spacer").style.height = "160px"; });
+  await page.waitForTimeout(1100);
+  const positions = await page.evaluate(() => {
+    const field = document.querySelector("#password").getBoundingClientRect();
+    const icon = __testRoot.querySelector(".field").getBoundingClientRect();
+    return { fieldMiddle: (field.top + field.bottom) / 2, iconMiddle: (icon.top + icon.bottom) / 2, left: field.left, right: field.right, iconLeft: icon.left, iconRight: icon.right };
+  });
+  assert.ok(Math.abs(positions.fieldMiddle - positions.iconMiddle) < 2);
+  assert.ok(positions.iconLeft >= positions.left && positions.iconRight <= positions.right);
+});
+
+test("real DOM: decorative elements do not push the icon away from the input edge", { skip: !enabled }, async t => {
+  const page = await setup(t, '<form><div style="position:relative"><input id="password" type="password"><span style="position:absolute;right:0;top:0;width:90px;height:46px;pointer-events:none"></span></div></form>');
+  const positions = await page.evaluate(() => {
+    const field = document.querySelector("#password").getBoundingClientRect();
+    const icon = __testRoot.querySelector(".field").getBoundingClientRect();
+    return { gap: field.right - icon.right };
+  });
+  assert.ok(positions.gap >= 7 && positions.gap <= 9);
+});
+
 test("real DOM: invalidated extension asks to reload the page", { skip: !enabled }, async t => {
   const page = await setup(t, login);
   await openFor(page, "#password");

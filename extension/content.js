@@ -121,8 +121,8 @@
       // Some sites put a wide "show password" button over the right end of the input.
       // Keep our icon before that button instead of covering its eye icon.
       let right = r.right - 8;
-      for (const control of (field.parentElement?.parentElement || field.parentElement)?.querySelectorAll("*") || []) {
-        if (control === field || control.contains(field)) continue;
+      for (const control of (field.parentElement?.parentElement || field.parentElement)?.querySelectorAll('button, [role="button"], a[href], input:not([type="hidden"])') || []) {
+        if (control === field || control.contains(field) || control.disabled || getComputedStyle(control).visibility !== "visible" || getComputedStyle(control).opacity === "0") continue;
         const b = control.getBoundingClientRect();
         const middle = r.top + r.height / 2;
         if (b.width > 0 && b.width <= Math.min(160, r.width / 2)
@@ -132,6 +132,7 @@
       }
       item.button.style.left = Math.max(r.left + 4, Math.min(innerWidth - 28, right - 26)) + "px";
       item.button.style.top = (r.top + (r.height - 26) / 2) + "px";
+      item.rect = [r.left, r.top, r.width, r.height];
     }
     positionPanel();
   }
@@ -261,6 +262,18 @@
   window.addEventListener("popstate", close);
   window.addEventListener("scroll", schedulePosition, true);
   window.addEventListener("resize", schedulePosition);
+  // Layout shifts and CSS animations can move a field without scrolling, resizing the
+  // document, or changing a DOM attribute. Follow those movements while the tab is visible.
+  setInterval(() => {
+    if (document.hidden) return;
+    for (const [field, item] of items) {
+      const r = field.getBoundingClientRect();
+      if (!item.rect || [r.left, r.top, r.width, r.height].some((value, i) => Math.abs(value - item.rect[i]) > 0.5)) {
+        schedulePosition();
+        break;
+      }
+    }
+  }, 150);
   // Watch page forms, including React/Vue forms inserted after navigation. Shadow UI changes do not feed this observer.
   new MutationObserver(scheduleScan).observe(document.documentElement, { childList: true, subtree: true,
     attributes: true, attributeFilter: ["type", "disabled", "readonly", "hidden", "style", "class", "autocomplete"] });
