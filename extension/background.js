@@ -54,7 +54,7 @@ async function activePage(sender, kind) {
     : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
   if (!tab?.id || !tab.url || new URL(tab.url).protocol !== "https:")
     throw new Error("Abra uma página HTTPS para usar o Cofre.");
-  if (kind === "inline" && (sender.url !== tab.url || tab.active === false))
+  if (kind === "inline" && (new URL(sender.url).origin !== new URL(tab.url).origin || tab.active === false))
     throw new Error("A página mudou ou não está ativa. Clique no campo novamente.");
   if (kind === "inline" && !await chrome.permissions.contains({ origins: ["https://" + new URL(tab.url).hostname + "/*"] }))
     throw new Error("O acesso a este site foi removido. Ative os ícones pela extensão novamente.");
@@ -100,6 +100,7 @@ async function handle(message, sender, kind) {
     return { ok: true, ...info, options, origin };
   }
   if (["list", "inline.list"].includes(message.action)) {
+    if (inline) await operate("inspect");
     const response = await native({ action: "list", url: origin });
     return { ...response, origin, pageUrl: url };
   }

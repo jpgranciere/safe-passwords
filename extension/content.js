@@ -47,7 +47,7 @@
       <header><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 3h17v6H12l-3 3v8l3 3h14v6H9l-6-6V9z"/><path d="M17 13h12v6H17z"/></svg><strong>Cofre</strong><button class="close" title="Fechar" aria-label="Fechar">×</button></header>
       <p class="site"></p><p class="hint"></p>
       <nav role="tablist" aria-label="Ações"><button id="accounts-tab" role="tab" aria-controls="accounts" aria-selected="true">Contas do site</button><button id="generator-tab" role="tab" aria-controls="generator" aria-selected="false">Gerar senha</button></nav>
-      <section id="accounts" role="tabpanel" aria-labelledby="accounts-tab"><div id="entries"></div><button id="refresh" class="entry">Atualizar contas</button></section>
+      <section id="accounts" role="tabpanel" aria-labelledby="accounts-tab"><label for="account-choice">Selecione a conta desejada</label><select id="account-choice"><option value="">Selecione uma conta</option></select><button id="fill-account" class="save" type="button" disabled>Preencher senha</button><div id="entries"></div><button id="refresh" class="entry">Atualizar contas</button></section>
       <section id="generator" role="tabpanel" aria-labelledby="generator-tab" hidden>
         <div class="preview-row"><input class="preview" type="password" aria-label="Senha sugerida" readonly spellcheck="false" autocomplete="off"><button id="toggle-preview" class="visibility" type="button" aria-label="Mostrar senha" title="Mostrar senha" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c-5 0-9 3.5-11 7 2 3.5 6 7 11 7s9-3.5 11-7c-2-3.5-6-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg></button></div>
         <div class="actions"><button id="use">Usar esta senha</button><button id="regenerate" class="secondary">Gerar senha</button></div>
@@ -73,7 +73,7 @@
   const say = (text, error = false) => { status.textContent = text; status.classList.toggle("error", error); };
   function close() {
     generation++; active = null; panel.hidden = true; preview.value = ""; clearTimeout(timer); setPreviewVisibility(false);
-    $("#entries").replaceChildren(); $("#save-target").replaceChildren(new Option("Criar nova conta no Cofre", ""), new Option("Criar token no Cofre", "new-token"));
+    $("#entries").replaceChildren(); $("#account-choice").replaceChildren(new Option("Selecione uma conta", "")); $("#save-target").replaceChildren(new Option("Criar nova conta no Cofre", ""), new Option("Criar token no Cofre", "new-token"));
   }
   async function request(action, extra = {}) {
     const context = generation;
@@ -99,6 +99,7 @@
     finally {
       working = false;
       root.querySelectorAll(".panel button, .settings input, select").forEach(el => { el.disabled = false; });
+      $("#fill-account").disabled = kind !== "login" || !$("#account-choice").value;
       if (kind !== "login") root.querySelectorAll("#entries button").forEach(el => { el.disabled = true; });
       reposition();
     }
@@ -109,12 +110,14 @@
     if (location.href !== pageUrl || !visible(active.field) || rect.bottom < 0 || rect.top > innerHeight) { close(); return; }
     const width = Math.min(344, innerWidth - 24);
     panel.style.width = width + "px";
-    panel.style.left = Math.max(12, Math.min(rect.right - width, innerWidth - width - 12)) + "px";
+    const origin = host.getBoundingClientRect();
+    panel.style.left = (Math.max(12, Math.min(rect.right - width, innerWidth - width - 12)) - origin.left) + "px";
     const height = panel.getBoundingClientRect().height;
-    panel.style.top = Math.max(12, Math.min(rect.bottom + 8, innerHeight - height - 12)) + "px";
+    panel.style.top = (Math.max(12, Math.min(rect.bottom + 8, innerHeight - height - 12)) - origin.top) + "px";
   }
   function reposition() {
     positioned = false;
+    const origin = host.getBoundingClientRect();
     for (const [field, item] of items) {
       const r = field.getBoundingClientRect();
       item.button.hidden = !visible(field) || r.width < 70 || r.height < 24 || r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth;
@@ -130,8 +133,8 @@
           && b.right > r.right - Math.min(160, r.width * 0.4)
           && b.bottom > middle && b.top < middle) right = Math.min(right, b.left - 6);
       }
-      item.button.style.left = Math.max(r.left + 4, Math.min(innerWidth - 28, right - 26)) + "px";
-      item.button.style.top = (r.top + (r.height - 26) / 2) + "px";
+      item.button.style.left = (Math.max(r.left + 4, Math.min(innerWidth - 28, right - 26)) - origin.left) + "px";
+      item.button.style.top = (r.top + (r.height - 26) / 2 - origin.top) + "px";
       item.rect = [r.left, r.top, r.width, r.height];
     }
     positionPanel();
@@ -162,11 +165,13 @@
   }
   async function loadAccounts() {
     $("#entries").replaceChildren();
+    $("#account-choice").replaceChildren(new Option("Selecione uma conta", ""));
     const response = await request("list");
     const selection = $("#save-target");
     const previous = selection.value;
     selection.replaceChildren(new Option("Criar nova conta no Cofre", ""), new Option("Criar token no Cofre", "new-token"));
     for (const entry of response.entries) {
+      $("#account-choice").add(new Option((entry.title || "Conta") + " — " + (entry.username || "Sem usuário"), entry.id));
       const option = new Option("Atualizar: " + entry.title + " — " + entry.username, entry.id); selection.add(option);
       const button = document.createElement("button"); button.className = "entry";
       const title = document.createElement("b"); title.textContent = entry.title;
@@ -234,6 +239,17 @@
   $("#toggle-preview").addEventListener("click", event => { if (event.isTrusted) setPreviewVisibility(preview.type === "password"); });
   $(".settings").addEventListener("change", event => { if (event.isTrusted) run(generate); });
   $("#refresh").addEventListener("click", event => { if (event.isTrusted) run(loadAccounts); });
+  $("#account-choice").addEventListener("change", event => { $("#fill-account").disabled = kind !== "login" || !event.target.value; });
+  $("#fill-account").addEventListener("click", event => {
+    if (!event.isTrusted || !$("#account-choice").value) return;
+    run(async () => {
+      const id = $("#account-choice").value;
+      say("Preenchendo… Se necessário, desbloqueie o aplicativo Cofre.");
+      await request("fill", { id });
+      $("#save-target").value = id;
+      say("Senha preenchida. Confira os dados antes de continuar.");
+    });
+  });
   $("#use").addEventListener("click", event => {
     if (!event.isTrusted) return;
     run(async () => {

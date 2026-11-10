@@ -15,8 +15,8 @@ export function formOperation(expectedUrl, operation, data = {}) {
   const field = target || (all.length === 1 ? all[0] : null);
   if (!field) fail("Escolha um campo usando o ícone do Cofre ao lado da senha.");
   const form = field.form;
-  const scope = form || document;
-  const passwords = all.filter(el => el.form === form);
+  const scope = form || field.closest('dialog, [role="dialog"], [aria-modal="true"]') || document;
+  const passwords = all.filter(el => el.form === form && (form || scope === document || scope.contains(el)));
   const ac = el => (el.autocomplete || "").toLowerCase().split(/\s+/);
   const newFields = passwords.filter(el => ac(el).includes("new-password"));
   const currentFields = passwords.filter(el => ac(el).includes("current-password")

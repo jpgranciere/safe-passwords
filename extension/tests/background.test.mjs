@@ -128,6 +128,16 @@ test("inline requests from inactive or navigated tabs are rejected", async () =>
   assert.equal((await request({ action: "inline.list", pageUrl: page.url, field: "token" }, inline())).ok, false);
   assert.equal(nativeRequests.length, 0);
 });
+test("inline list permits same-document navigation but validates the current document", async () => {
+  reset(); const sender = inline(); page.url = "https://example.com/settings";
+  const response = await request({ action: "inline.list", pageUrl: page.url, field: "token" }, sender);
+  assert.equal(response.ok, true);
+  assert.equal(injections[0].args[1], "inspect");
+  assert.deepEqual(injections[0].target, { tabId: 12, documentIds: ["test-document"] });
+  reset(); const foreign = inline(); page.url = "https://evil.test/settings";
+  assert.equal((await request({ action: "inline.list", pageUrl: page.url, field: "token" }, foreign)).ok, false);
+  assert.equal(nativeRequests.length, 0);
+});
 test("removing site permission stops existing inline scripts from requesting data", async () => {
   reset(); permission = false;
   assert.equal((await request({ action: "inline.list", pageUrl: page.url, field: "token" }, inline())).ok, false);

@@ -168,6 +168,39 @@ test("real DOM: field icon leaves room for a wide show-password button", { skip:
   assert.ok(positions.iconRight <= positions.eyeLeft - 5);
 });
 
+test("real DOM: choose a saved account and fill the selected password", { skip: !enabled }, async t => {
+  const page = await setup(t, login);
+  await openFor(page, "#password");
+  assert.equal(await state(page, "#fill-account", "disabled"), true);
+  await (await part(page, "#account-choice")).selectOption("account1");
+  await click(page, "#fill-account");
+  assert.equal(await page.locator("#password").inputValue(), "test-only-secret");
+  assert.equal(await page.evaluate(() => __requests.find(r => r.action === "inline.fill").id), "account1");
+});
+
+test("real DOM: choosing a password in a dialog does not affect fields behind it", { skip: !enabled }, async t => {
+  const page = await setup(t, '<input id="behind" type="password"><div role="dialog" aria-modal="true"><label>Senha de administrador<input id="password" type="password"></label></div>');
+  await openFor(page, "#password");
+  assert.match(await state(page, ".hint"), /Login identificado/);
+  await (await part(page, "#account-choice")).selectOption("account1");
+  await click(page, "#fill-account");
+  assert.equal(await page.locator("#password").inputValue(), "test-only-secret");
+  assert.equal(await page.locator("#behind").inputValue(), "");
+});
+
+test("real DOM: icon stays inside the field when the document is translated", { skip: !enabled }, async t => {
+  const page = await setup(t, login);
+  await page.evaluate(() => { document.documentElement.style.transform = "translate(30px, 55px)"; });
+  await page.waitForTimeout(400);
+  const position = await page.evaluate(() => {
+    const field = document.querySelector("#password").getBoundingClientRect();
+    const icon = __testRoot.querySelector(".field").getBoundingClientRect();
+    return { left: field.left, right: field.right, middle: (field.top + field.bottom) / 2, iconLeft: icon.left, iconRight: icon.right, iconMiddle: (icon.top + icon.bottom) / 2 };
+  });
+  assert.ok(position.iconLeft >= position.left && position.iconRight <= position.right);
+  assert.ok(Math.abs(position.middle - position.iconMiddle) < 2);
+});
+
 test("real DOM: field icon follows layout shifts after a transition", { skip: !enabled }, async t => {
   const page = await setup(t, '<form><div id="spacer" style="height:0;transition:height 0.8s linear"></div><input id="password" type="password"></form>');
   await page.evaluate(() => { document.querySelector("#spacer").style.height = "160px"; });
